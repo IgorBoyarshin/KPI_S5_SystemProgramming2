@@ -2,5 +2,8 @@ Task/
 
 *.docx
 *.o
+*.jpg
+*.jpeg
+*.png
 
 lab1
