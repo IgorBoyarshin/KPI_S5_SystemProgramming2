@@ -12,7 +12,7 @@ enum Signal {
 };
 
 
-std::ostream& operator<<(std::ostream& os, Signal signal);
+std::ostream& operator<<(std::ostream& os, const Signal& signal);
 Signal getSignalFromString(const std::string& str);
 
 #endif

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-std::ostream& operator<<(std::ostream& os, Signal signal) {
+std::ostream& operator<<(std::ostream& os, const Signal& signal) {
     switch(signal) {
         case SignalDlm:
             os << "dlm";

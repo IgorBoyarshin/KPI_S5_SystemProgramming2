@@ -3,6 +3,11 @@
 #include "Signal.h"
 #include "Transition.h"
 
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
+
 
 const State MooreMachine::END_STATE =
     static_cast<State>(StatesAmount - 1);
@@ -64,6 +69,19 @@ void MooreMachine::performStep(Signal signal) {
 
 void MooreMachine::performSteps(const std::vector<Signal>& signals) {
     for (const Signal& signal : signals) {
+        performStep(signal);
+    }
+}
+
+
+void MooreMachine::performStepsRaw(const std::string& signalsString) {
+    using namespace std;
+    istringstream iss(signalsString);
+    const vector<string> signalStrings{istream_iterator<string>{iss},
+                      istream_iterator<string>{}};
+
+    for (const string& signalString : signalStrings) {
+        const Signal signal = getSignalFromString(signalString);
         performStep(signal);
     }
 }

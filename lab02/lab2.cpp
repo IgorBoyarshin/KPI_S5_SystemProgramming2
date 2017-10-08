@@ -16,6 +16,7 @@
 #include "Signal.h"
 #include "State.h"
 
+
 void doParseGraph();
 void doMooreMachine();
 
@@ -33,7 +34,7 @@ int main() {
               << std::endl;
 
     doMooreMachine();
-
+    
     return 0;
 }
 
@@ -94,4 +95,7 @@ void doMooreMachine() {
         SignalCfr,
         SignalCfr
     });
+    
+    // mooreMachine.performStepsRaw(
+    //         "ltr dlm cfr dlm cfr cfr ltr cfr cfr cfr cfr cfr cfr cfr cfr");
 }

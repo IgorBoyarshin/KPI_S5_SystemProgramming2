@@ -26,6 +26,7 @@ class MooreMachine {
     public:
         void performStep(Signal signal);
         void performSteps(const std::vector<Signal>& signals);
+        void performStepsRaw(const std::string& signalsString);
 };
 
 #endif
