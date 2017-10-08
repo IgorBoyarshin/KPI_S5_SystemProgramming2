@@ -14,6 +14,7 @@
 #include "MooreMachine.h"
 #include "Transition.h"
 #include "Signal.h"
+#include "State.h"
 
 void doParseGraph();
 void doMooreMachine();

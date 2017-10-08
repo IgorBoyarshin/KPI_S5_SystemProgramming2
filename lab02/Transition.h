@@ -1,7 +1,7 @@
 #ifndef TRANSITION_H
 #define TRANSITION_H
 
-#include "state.h"
+#include "State.h"
 #include "Signal.h"
 
 struct Transition {

@@ -1,7 +1,7 @@
 #ifndef MOOREMACHINE_H
 #define MOOREMACHINE_H
 
-#include "state.h"
+#include "State.h"
 #include "Signal.h"
 #include "Transition.h"
 #include <vector>

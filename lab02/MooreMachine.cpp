@@ -1,5 +1,5 @@
 #include "MooreMachine.h"
-#include "state.h"
+#include "State.h"
 #include "Signal.h"
 #include "Transition.h"
 

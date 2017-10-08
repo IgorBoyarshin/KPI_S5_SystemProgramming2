@@ -5,7 +5,7 @@ all: cleanExe lab2
 lab2: lab2.o Token.o Node.o MooreMachine.o Signal.o
 	g++ $(CFLAGS) -o lab2 lab2.o Token.o Node.o MooreMachine.o Signal.o
 
-lab2.o: lab2.cpp state.h Transition.h
+lab2.o: lab2.cpp State.h Transition.h
 	g++ $(CFLAGS) -c lab2.cpp
 
 Token.o: Token.cpp
