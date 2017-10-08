@@ -10,6 +10,8 @@ class Token {
 
     public:
         const static Token IF;
+        const static Token IFCOND;
+        const static Token IFBLOCK;
         const static Token ELSE;
         const static Token LEFT_BRACKET;
         const static Token RIGHT_BRACKET;
@@ -26,38 +28,5 @@ class Token {
 };
 
 std::ostream& operator<<(std::ostream& os, Token token);
-    // os << token._Lexeme;
-    // switch(token) {
-    //     case IF:
-    //         os << "if";
-    //         break;
-    //     case ELSE:
-    //         os << "else";
-    //         break;
-    //     case TokenLeftBracket:
-    //         os << "(";
-    //         break;
-    //     case TokenRightBracket:
-    //         os << ")";
-    //         break;
-    //     case TokenAssign:
-    //         os << "=";
-    //         break;
-    //     case TokenMul:
-    //         os << "*";
-    //         break;
-    //     case TokenSin:
-    //         os << "sin";
-    //         break;
-    //     case TokenColumn:
-    //         os << ";";
-    //         break;
-    //     case TokenVariable:
-    //     default:
-    //         os << "";
-    // }
-
-//     return os;
-// }
 
 #endif
