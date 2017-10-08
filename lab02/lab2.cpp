@@ -1,7 +1,6 @@
 /*
  * System Programming
- * "Modular programming in basic program design strategy and its usage in
- * programs for table creation"
+ * "Creation of Nodes for tree-like graphs with hierarchy"
  *
  * Author: Igor Boyarshin, #5207, IO-52, FIOT
  * Date: 07.10.17
@@ -34,7 +33,7 @@ int main() {
               << std::endl;
 
     doMooreMachine();
-    
+
     return 0;
 }
 
@@ -95,7 +94,7 @@ void doMooreMachine() {
         SignalCfr,
         SignalCfr
     });
-    
+
     // mooreMachine.performStepsRaw(
     //         "ltr dlm cfr dlm cfr cfr ltr cfr cfr cfr cfr cfr cfr cfr cfr");
 }
