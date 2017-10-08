@@ -11,11 +11,33 @@
 #include <vector>
 #include "Token.h"
 #include "Node.h"
+#include "MooreMachine.h"
+#include "Transition.h"
+#include "Signal.h"
+
+void doParseGraph();
+void doMooreMachine();
+
 
 int main() {
     std::cout << "---------------- Program start ----------------"
-        << std::endl;
+              << std::endl;
 
+    std::cout << "---------------- Parse Graph ----------------"
+              << std::endl;
+
+    doParseGraph();
+
+    std::cout << "---------------- Moore Machine ----------------"
+              << std::endl;
+
+    doMooreMachine();
+
+    return 0;
+}
+
+
+void doParseGraph() {
     const Token tokenA("a");
     const Token tokenB("b");
     const Token tokenC("c");
@@ -45,6 +67,30 @@ int main() {
     const Node node22(Token::IFBLOCK, &node14, &node21);
 
     std::cout << &node22 << std::endl;
+}
 
-    return 0;
+
+void doMooreMachine() {
+    MooreMachine mooreMachine({
+        Transition(State3, State3, SignalDlm),
+        Transition(State5, State1, SignalLtr)
+    });
+
+    mooreMachine.performSteps({
+        SignalLtr,
+        SignalDlm,
+        SignalCfr,
+        SignalDlm,
+        SignalCfr,
+        SignalCfr,
+        SignalLtr,
+        SignalCfr,
+        SignalCfr,
+        SignalCfr,
+        SignalCfr,
+        SignalCfr,
+        SignalCfr,
+        SignalCfr,
+        SignalCfr
+    });
 }
