@@ -1,6 +1,7 @@
 Task/
 
 *.docx
+.~lock.*
 *.o
 *.jpg
 *.jpeg
