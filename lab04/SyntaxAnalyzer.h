@@ -5,6 +5,7 @@
 #include <string>
 #include "Token.h"
 #include "Context.h"
+#include "ContextType.h"
 #include "Node.h"
 
 class SyntaxAnalyzer {
@@ -16,9 +17,9 @@ class SyntaxAnalyzer {
     private:
         const std::vector<Token> m_TokensTable;
 
-        std::vector<Node*> nodes;
-        unsigned int currentTokensTableIndex;
-        Context currentContext;
+        std::vector<Node*> m_Nodes;
+        unsigned int m_CurrentTokensTableIndex;
+        Context m_CurrentContext;
 
 
     private:
@@ -29,9 +30,11 @@ class SyntaxAnalyzer {
 
         const Token* peekNext() const;
 
-        bool isAllowed(const Token* token1, const Token* token2) const;
+        bool isAllowed(const NodeType nodeType1, const NodeType nodeType2, const Context& context) const;
 
         bool matchExists(const std::string& str1, const std::string& str2) const;
+
+        Node convertIntoNodeType(const Token* token) const;
 };
 
 #endif

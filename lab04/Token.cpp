@@ -9,6 +9,14 @@ Token::Token(const TokenName& name, const std::string& value) :
     m_Name(name), m_Value(value) {}
 
 
+TokenName Token::getName() const {
+    return m_Name;
+}
+
+std::string Token::getValue() const {
+    return m_Value;
+}
+
 Token& Token::operator=(const Token& token) {
     this->m_Name = token.m_Name;
     this->m_Value = token.m_Value;

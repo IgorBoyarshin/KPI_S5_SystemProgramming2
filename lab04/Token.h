@@ -13,6 +13,9 @@ class Token {
 
         friend std::ostream& operator<<(std::ostream& os, const Token& token);
 
+        TokenName getName() const;
+        std::string getValue() const;
+
     private:
         TokenName m_Name;
         std::string m_Value;

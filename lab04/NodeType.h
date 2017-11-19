@@ -18,7 +18,7 @@ enum NodeType {
     NodeType_BracesOpen, // {
     NodeType_BracesClose, // }
     NodeType_OperatorPlus,
-    NodeType_OperatorMinux,
+    NodeType_OperatorMinus,
     NodeType_OperatorMultiply,
     NodeType_OperatorDivide,
     NodeType_OperatorEquals,

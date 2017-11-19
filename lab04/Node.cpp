@@ -57,7 +57,7 @@ std::ostream& operator<<(std::ostream& os, const Node& node) {
         case NodeType_OperatorPlus:
             os << "+";
             break;
-        case NodeType_OperatorMinux:
+        case NodeType_OperatorMinus:
             os << "-";
             break;
         case NodeType_OperatorMultiply:
