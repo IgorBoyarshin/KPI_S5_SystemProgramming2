@@ -16,29 +16,61 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
 
     while (currentIndex < size) {
         const char c = input[currentIndex];
+        std::string cc;
         TokenName tokenName;
         bool separatorFound = false;
 
         switch(c) {
             case '(':
+                tokenName = TokenName_Parentheses_Open;
+                separatorFound = true;
+                break;
             case ')':
-                tokenName = TokenName_Parentheses;
+                tokenName = TokenName_Parentheses_Close;
                 separatorFound = true;
                 break;
 
             case '{':
+                tokenName = TokenName_Braces_Open;
+                separatorFound = true;
+                break;
             case '}':
-                tokenName = TokenName_Braces;
+                tokenName = TokenName_Braces_Close;
                 separatorFound = true;
                 break;
 
             case '[':
+                tokenName = TokenName_Brackets_Open;
+                separatorFound = true;
+                break;
             case ']':
-                tokenName = TokenName_Brackets;
+                tokenName = TokenName_Brackets_Close;
+                separatorFound = true;
+                break;
+
+            // TODO: implement unary !
+            case '!':
+                if (currentIndex + 1 < size - 1 && input[currentIndex + 1] == '=') {
+                    currentIndex++;
+                    tokenName = TokenName_Operator;
+                    cc = "!=";
+                } else {
+                    tokenName = TokenName_Unknown;
+                }
                 separatorFound = true;
                 break;
 
             case '=':
+                if (currentIndex + 1 < size - 1 && input[currentIndex + 1] == '=') {
+                    currentIndex++;
+                    tokenName = TokenName_Operator;
+                    cc = "==";
+                } else {
+                    tokenName = TokenName_Operator_Assign;
+                }
+                separatorFound = true;
+                break;
+
             case '+':
             case '-':
             case '*':
@@ -49,6 +81,11 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
 
             case ';':
                 tokenName = TokenName_Semicolon;
+                separatorFound = true;
+                break;
+
+            case ',':
+                tokenName = TokenName_Comma;
                 separatorFound = true;
                 break;
 
@@ -89,9 +126,9 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
                 if (accumulatingNumber) {
                     m_TokensTable.emplace_back(TokenName_Literal, accumulator);
                 } else {
-                    const bool keyword = isKeyword(accumulator);
+                    const TokenName keyword = getIfKeyword(accumulator);
                     m_TokensTable.emplace_back(
-                            keyword ? TokenName_Keyword : TokenName_Identifier,
+                            keyword != TokenName_Unknown ? keyword : TokenName_Identifier,
                             accumulator);
                 }
 
@@ -102,7 +139,11 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
             // It is time to insert the signle token
             // (unless it is a space, in this case just skip it)
             if (c != ' ') {
-                m_TokensTable.push_back(Token(tokenName, std::string(1, c)));
+                if (cc.size() > 0) {
+                    m_TokensTable.push_back(Token(tokenName, cc));
+                } else {
+                    m_TokensTable.push_back(Token(tokenName, std::string(1, c)));
+                }
                 // m_TokensTable.emplace_back(tokenName, "" + c);
             }
 

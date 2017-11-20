@@ -4,9 +4,15 @@
 #include <vector>
 #include <string>
 #include "Token.h"
-#include "Context.h"
-#include "ContextType.h"
+// #include "Context.h"
+// #include "ContextType.h"
 #include "Node.h"
+#include "RuleType.h"
+#include <tuple>
+#include <map>
+
+
+typedef std::tuple<std::vector<NodeType>, NodeType, RuleType> ReductionPattern;
 
 class SyntaxAnalyzer {
     public:
@@ -15,26 +21,31 @@ class SyntaxAnalyzer {
 
         bool parse();
     private:
-        const std::vector<Token> m_TokensTable;
+        std::vector<Node> m_ConvertedTokensTable;
 
-        std::vector<Node*> m_Nodes;
-        unsigned int m_CurrentTokensTableIndex;
-        Context m_CurrentContext;
+        std::vector<const Node*> m_Nodes;
+        unsigned int m_NextTokensTableIndex;
+        // Context m_CurrentContext;
+
+        std::vector<ReductionPattern> m_ReductionPatterns;
+        std::map<NodeType, std::vector<NodeType>> m_AllowedSequences;
 
 
     private:
         // returns true if the reduce was possible
         bool reduceIfCan();
 
-        const Token* getNext();
+        std::vector<ReductionPattern> getPotentialReductionPatterns() const;
 
-        const Token* peekNext() const;
+        const Node* getNext();
 
-        bool isAllowed(const NodeType nodeType1, const NodeType nodeType2, const Context& context) const;
+        const Node* peekNext() const;
+
+        bool isAllowed(const NodeType nodeType1, const NodeType nodeType2) const; //, const Context& context) const;
 
         bool matchExists(const std::string& str1, const std::string& str2) const;
 
-        Node convertIntoNodeType(const Token* token) const;
+        Node convertIntoNodeType(const Token token) const;
 };
 
 #endif

@@ -1,28 +1,22 @@
-name = lab3
-files = $(name).o Token.o TokenName.o LexicalAnalyzer.o
+mainFileName = lab4
+files = Node NodeType Token TokenName SyntaxAnalyzer LexicalAnalyzer
+allFiles = $(mainFileName) $(files)
+filesObj = $(addsuffix .o, $(allFiles))
+filesH = $(addsuffix .h, $(files))
 
-all: cleanExe $(name)
+all: cleanExe $(mainFileName)
 
 # Execution
-$(name): $(files)
-	g++ $(CFLAGS) -o $(name) $(files)
+$(mainFileName): $(filesObj)
+	g++ $(CFLAGS) $^ -o $@
 
-# main file
-$(name).o: $(name).cpp
-	g++ $(CFLAGS) -c $(name).cpp
+# Compilation
+%.o: %.cpp $(filesH)
+	g++ -c $< $(CFLAGS)
 
-Token.o: Token.cpp Token.h
-	g++ $(CFLAGS) -c Token.cpp
-
-TokenName.o: TokenName.cpp TokenName.h
-	g++ $(CFLAGS) -c TokenName.cpp
-
-LexicalAnalyzer.o: LexicalAnalyzer.cpp LexicalAnalyzer.h
-	g++ $(CFLAGS) -c LexicalAnalyzer.cpp
-
+# Utils
 clean:
-	rm -f *.o $(name)
+	rm -f *.o $(mainFileName)
 
 cleanExe:
-	rm -f $(name)
-
+	rm -f $(mainFileName)

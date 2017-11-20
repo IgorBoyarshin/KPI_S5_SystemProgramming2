@@ -2,6 +2,7 @@
 #define NODETYPE_H
 
 #include <string>
+#include <iostream>
 
 enum NodeType {
     // Terminal symbols. Runtime-defined
@@ -31,20 +32,13 @@ enum NodeType {
     // NodeType_IfBlock,
     // NodeType_IfElseBlock,
     NodeType_Statement,
-    NodeType_StatementBody,
     NodeType_Expression,
-    NodeType_Function
+    NodeType_Function,
+    NodeType_StatementList,
+    NodeType_ExpressionList
 };
 
-// Caution: not generalized
-unsigned int stringToInt(const std::string& str) {
-    unsigned int number = 0;
-    const unsigned int length = str.size();
-    for (unsigned int i = 0; i < length; i++) {
-        number = 10 * number + str[length - i - 1];
-    }
-
-    return number;
-}
+std::ostream& operator<<(std::ostream& os, const NodeType& nodeType);
+unsigned int stringToInt(const std::string& str);
 
 #endif

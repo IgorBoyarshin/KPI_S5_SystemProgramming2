@@ -10,7 +10,7 @@ enum TokenName {
     TokenName_Keyword_If,
     TokenName_Keyword_Else,
     TokenName_Operator,
-    TokenName_Operator_Equals,
+    TokenName_Operator_Assign,
     TokenName_Brackets_Open, // [
     TokenName_Brackets_Close, // ]
     TokenName_Parentheses_Open, // (
@@ -23,6 +23,6 @@ enum TokenName {
 };
 
 std::ostream& operator<<(std::ostream& os, const TokenName& tokenName);
-bool isKeyword(const std::string& lexeme);
+TokenName getIfKeyword(const std::string& lexeme);
 
 #endif

@@ -17,7 +17,7 @@ std::ostream& operator<<(std::ostream& os, const TokenName& tokenName) {
         case TokenName_Operator:
             os << "Operator";
             break;
-        case TokenName_Operator_Equals:
+        case TokenName_Operator_Assign:
             os << "Operator equals";
             break;
         case TokenName_Brackets_Open:
@@ -27,7 +27,7 @@ std::ostream& operator<<(std::ostream& os, const TokenName& tokenName) {
             os << "Brackets close";
             break;
         case TokenName_Parentheses_Open:
-            os << "Parentheses close";
+            os << "Parentheses open";
             break;
         case TokenName_Parentheses_Close:
             os << "Parentheses close";
@@ -53,14 +53,14 @@ std::ostream& operator<<(std::ostream& os, const TokenName& tokenName) {
 }
 
 
-bool isKeyword(const std::string& potentialKeyword) {
-    static const std::string KEYWORDS[] = {"if", "else", "sin"};
+TokenName getIfKeyword(const std::string& potentialKeyword) {
+    static const std::string KEYWORDS[] = {"if", "else"};
 
-    for (const std::string& keyword : KEYWORDS) {
-        if (potentialKeyword.compare(keyword) == 0) {
-            return true;
-        }
+    if (potentialKeyword.compare("if") == 0) {
+        return TokenName_Keyword_If;
+    } else if (potentialKeyword.compare("else") == 0) {
+        return TokenName_Keyword_Else;
     }
 
-    return false;
+    return TokenName_Unknown;
 }
