@@ -61,6 +61,18 @@ std::ostream& operator<<(std::ostream& os, const NodeType& nodeType) {
         case NodeType_OperatorNotEquals:
             os << "!=";
             break;
+        case NodeType_OperatorLess:
+            os << "<";
+            break;
+        case NodeType_OperatorLessOrEquals:
+            os << "<=";
+            break;
+        case NodeType_OperatorGreater:
+            os << ">";
+            break;
+        case NodeType_OperatorGreaterOrEquals:
+            os << ">=";
+            break;
         case NodeType_OperatorAssign:
             os << "=";
             break;

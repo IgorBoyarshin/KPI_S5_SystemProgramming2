@@ -71,6 +71,23 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
                 separatorFound = true;
                 break;
 
+            case '<':
+                if (currentIndex + 1 < size - 1 && input[currentIndex + 1] == '=') {
+                    currentIndex++;
+                    cc = "<=";
+                }
+                tokenName = TokenName_Operator;
+                separatorFound = true;
+                break;
+            case '>':
+                if (currentIndex + 1 < size - 1 && input[currentIndex + 1] == '=') {
+                    currentIndex++;
+                    cc = ">=";
+                }
+                tokenName = TokenName_Operator;
+                separatorFound = true;
+                break;
+
             case '+':
             case '-':
             case '*':

@@ -35,7 +35,9 @@ SyntaxAnalyzer::SyntaxAnalyzer(
             NodeType_Expression,
             {NodeType_Semicolon, NodeType_ParenthesesClose, NodeType_OperatorPlus,
                 NodeType_OperatorMinus, NodeType_OperatorMultiply, NodeType_OperatorDivide,
-                NodeType_OperatorEquals, NodeType_OperatorNotEquals, NodeType_Comma}
+                NodeType_OperatorEquals, NodeType_OperatorNotEquals, NodeType_OperatorLess,
+                NodeType_OperatorLessOrEquals, NodeType_OperatorGreater,
+                NodeType_OperatorGreaterOrEquals, NodeType_Comma}
         )
     );
     m_AllowedSequences.insert(
@@ -107,6 +109,30 @@ SyntaxAnalyzer::SyntaxAnalyzer(
     m_AllowedSequences.insert(
         std::pair<NodeType, std::vector<NodeType>> (
             NodeType_OperatorNotEquals,
+            {NodeType_Expression}
+        )
+    );
+    m_AllowedSequences.insert(
+        std::pair<NodeType, std::vector<NodeType>> (
+            NodeType_OperatorLess,
+            {NodeType_Expression}
+        )
+    );
+    m_AllowedSequences.insert(
+        std::pair<NodeType, std::vector<NodeType>> (
+            NodeType_OperatorLessOrEquals,
+            {NodeType_Expression}
+        )
+    );
+    m_AllowedSequences.insert(
+        std::pair<NodeType, std::vector<NodeType>> (
+            NodeType_OperatorGreater,
+            {NodeType_Expression}
+        )
+    );
+    m_AllowedSequences.insert(
+        std::pair<NodeType, std::vector<NodeType>> (
+            NodeType_OperatorGreaterOrEquals,
             {NodeType_Expression}
         )
     );
@@ -221,6 +247,34 @@ SyntaxAnalyzer::SyntaxAnalyzer(
     m_ReductionPatterns.push_back(
         std::make_tuple<std::vector<NodeType>, NodeType, RuleType>(
             {NodeType_Expression, NodeType_OperatorNotEquals, NodeType_Expression},
+            NodeType_Expression,
+            RuleType_Expression_ExpressionOpExpression
+        )
+    );
+    m_ReductionPatterns.push_back(
+        std::make_tuple<std::vector<NodeType>, NodeType, RuleType>(
+            {NodeType_Expression, NodeType_OperatorLess, NodeType_Expression},
+            NodeType_Expression,
+            RuleType_Expression_ExpressionOpExpression
+        )
+    );
+    m_ReductionPatterns.push_back(
+        std::make_tuple<std::vector<NodeType>, NodeType, RuleType>(
+            {NodeType_Expression, NodeType_OperatorLessOrEquals, NodeType_Expression},
+            NodeType_Expression,
+            RuleType_Expression_ExpressionOpExpression
+        )
+    );
+    m_ReductionPatterns.push_back(
+        std::make_tuple<std::vector<NodeType>, NodeType, RuleType>(
+            {NodeType_Expression, NodeType_OperatorGreater, NodeType_Expression},
+            NodeType_Expression,
+            RuleType_Expression_ExpressionOpExpression
+        )
+    );
+    m_ReductionPatterns.push_back(
+        std::make_tuple<std::vector<NodeType>, NodeType, RuleType>(
+            {NodeType_Expression, NodeType_OperatorGreaterOrEquals, NodeType_Expression},
             NodeType_Expression,
             RuleType_Expression_ExpressionOpExpression
         )
@@ -442,6 +496,10 @@ bool SyntaxAnalyzer::reduceIfCan() {
                 case NodeType_OperatorDivide:
                 case NodeType_OperatorEquals:
                 case NodeType_OperatorNotEquals:
+                case NodeType_OperatorLess:
+                case NodeType_OperatorLessOrEquals:
+                case NodeType_OperatorGreater:
+                case NodeType_OperatorGreaterOrEquals:
                     leftSideHasOperator = true;
                     break;
                 default:
@@ -458,6 +516,10 @@ bool SyntaxAnalyzer::reduceIfCan() {
                     case NodeType_OperatorDivide:
                     case NodeType_OperatorEquals:
                     case NodeType_OperatorNotEquals:
+                    case NodeType_OperatorLess:
+                    case NodeType_OperatorLessOrEquals:
+                    case NodeType_OperatorGreater:
+                    case NodeType_OperatorGreaterOrEquals:
                         rightSideHasOperator = true;
                         break;
                     default:
@@ -638,6 +700,14 @@ Node SyntaxAnalyzer::convertIntoNodeType(const Token token) const {
                 return Node(NodeType_OperatorEquals);
             } else if (tokenValue.compare("!=") == 0) {
                 return Node(NodeType_OperatorNotEquals);
+            } else if (tokenValue.compare("<") == 0) {
+                return Node(NodeType_OperatorLess);
+            } else if (tokenValue.compare("<=") == 0) {
+                return Node(NodeType_OperatorLessOrEquals);
+            } else if (tokenValue.compare(">") == 0) {
+                return Node(NodeType_OperatorGreater);
+            } else if (tokenValue.compare(">=") == 0) {
+                return Node(NodeType_OperatorGreaterOrEquals);
             } else {
                 std::cout << ":> Error: Unknown operator in convertIntoNodeType(): "
                     << tokenValue << std::endl;
@@ -668,35 +738,3 @@ Node SyntaxAnalyzer::convertIntoNodeType(const Token token) const {
 
     return Node(NodeType_Semicolon);
 }
-
-// BLUEPRINT START ------------
-            // switch (nodeType2) {
-            //     case NodeType_Id:
-            //     case NodeType_Literal:
-            //     case NodeType_KeywordIf:
-            //     case NodeType_KeywordElse:
-            //     case NodeType_BracketsOpen:
-            //     case NodeType_BracketsClose:
-            //     case NodeType_ParenthesesOpen:
-            //     case NodeType_ParenthesesClose:
-            //     case NodeType_BracesOpen:
-            //     case NodeType_BracesClose:
-            //     case NodeType_OperatorPlus:
-            //     case NodeType_OperatorMinus:
-            //     case NodeType_OperatorMultiply:
-            //     case NodeType_OperatorDivide:
-            //     case NodeType_OperatorEquals:
-            //     case NodeType_OperatorNotEquals:
-            //     case NodeType_OperatorAssign:
-            //     case NodeType_Comma:
-            //     case NodeType_Semicolon:
-            //     case NodeType_Statement:
-            //     case NodeType_StatementBody:
-            //     case NodeType_Expression:
-            //     case NodeType_Function:
-            //         return true;
-            //     default:
-            //         return false;
-            // }
-//
-// BLUEPRINT END --------------
