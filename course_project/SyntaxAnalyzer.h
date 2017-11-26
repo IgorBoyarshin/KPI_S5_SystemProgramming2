@@ -8,12 +8,11 @@
 #include <string>
 #include "Token.h"
 #include "Node.h"
-#include "RuleType.h"
 #include <tuple>
 #include <map>
 
 
-typedef std::tuple<std::vector<NodeType>, NodeType, RuleType> ReductionPattern;
+typedef std::tuple<std::vector<NodeType>, NodeType> ReductionPattern;
 
 class SyntaxAnalyzer {
     public:

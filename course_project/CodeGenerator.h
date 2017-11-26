@@ -32,7 +32,7 @@ class CodeGenerator {
         std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
             getAllFunctionDeclarations(const Node* parentNode) const;
 
-        void generateDeclarationCode(std::stringstream& code, const Node* declarationNode) const;
+        void generateDeclarationCode(std::stringstream& code, const Node* node) const;
         void generateVariableDeclarationsCode(std::stringstream& code) const;
         void generateBlockCode(std::stringstream& code, const Node* blockNode) const;
         void generateStatementListCode(

@@ -11,10 +11,10 @@ CodeGenerator::CodeGenerator(const Node* rootNode)
         //
 
         for (const auto& function : m_Functions) {
-            std::cout << "Func: " << function.second[0].second << " " 
+            std::cout << "Func: " << function.second[0].second << " "
                       << function.second[0].first << ": ";
             for (unsigned int i = 1; i < function.second.size(); i++) {
-                std::cout << " " << function.second[i].second << " " 
+                std::cout << " " << function.second[i].second << " "
                           << function.second[i].first << ", ";
             }
             std::cout << std::endl;
@@ -46,7 +46,7 @@ std::string CodeGenerator::generate() {
 
 
 void CodeGenerator::generateDeclarationCode(
-        std::stringstream& code, 
+        std::stringstream& code,
         const Node* node) const {
 
     if (

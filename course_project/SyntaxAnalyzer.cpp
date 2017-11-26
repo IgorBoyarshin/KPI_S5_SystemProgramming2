@@ -260,7 +260,6 @@ bool SyntaxAnalyzer::reduceIfCan() {
     // Insert a new Node instead of the reduced part
     m_Nodes.push_back(new Node(
         std::get<1>(firstReductionPattern),
-        std::get<2>(firstReductionPattern),
         children
     ));
 
@@ -490,10 +489,9 @@ std::vector<ReductionPattern> readReductionPatterns(const std::string& fileName)
             }
 
             reductionPatterns.push_back(
-                std::make_tuple<std::vector<NodeType>, NodeType, RuleType>(
+                std::make_tuple<std::vector<NodeType>, NodeType>(
                     std::move(from),
-                    std::move(to),
-                    RuleType_Expression_Literal // FIXME
+                    std::move(to)
                 )
             );
 

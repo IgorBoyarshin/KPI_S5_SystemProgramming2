@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include "NodeType.h"
-#include "RuleType.h"
 
 class Node {
     public:
@@ -14,7 +13,6 @@ class Node {
 
         Node(
             const NodeType nodeType,
-            const RuleType ruleType,
             const std::vector<const Node*>& children
         );
 
@@ -26,7 +24,6 @@ class Node {
     public:
         NodeType m_NodeType;
         std::string m_NodeValue;
-        RuleType m_RuleType;
         std::vector<const Node*> m_Children;
 
         friend std::ostream& operator<<(std::ostream& os, const Node& node);
