@@ -307,6 +307,9 @@ bool SyntaxAnalyzer::parse() {
 
     std::cout << "------Parsing finished-------" << std::endl;
 
+    std::cout << "----------- Tree ------------" << std::endl;
+    std::cout << *m_Nodes[0] << std::endl;
+
     if (m_Nodes.size() > 1) {
         // There is an error for sure, let's try to deduce where it is
         for (unsigned int i = 1; i < m_Nodes.size(); i++) {
@@ -328,6 +331,8 @@ bool SyntaxAnalyzer::parse() {
         std::cout << "[Parse error]: Unexpected top-level entry." << std::endl;
         return false;
     }
+
+
 
     return true;
 }
@@ -557,4 +562,9 @@ std::map<NodeType, std::vector<NodeType>> readAllowedSequences(const std::string
     in.close();
 
     return allowedSequences;
+}
+
+
+const Node* SyntaxAnalyzer::getRootNode() const {
+    return m_Nodes[0];
 }

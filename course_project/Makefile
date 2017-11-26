@@ -1,5 +1,5 @@
 mainFileName = main
-files = Node NodeType Token TokenType SyntaxAnalyzer LexicalAnalyzer
+files = Node NodeType Token TokenType SyntaxAnalyzer LexicalAnalyzer CodeGenerator
 allFiles = $(mainFileName) $(files)
 filesObj = $(addsuffix .o, $(allFiles))
 filesH = $(addsuffix .h, $(files))

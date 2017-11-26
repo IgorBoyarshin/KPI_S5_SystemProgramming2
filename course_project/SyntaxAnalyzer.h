@@ -21,6 +21,7 @@ class SyntaxAnalyzer {
         SyntaxAnalyzer(const std::vector<Token> tokensTable);
 
         bool parse();
+        const Node* getRootNode() const;
     private:
         std::vector<Node> m_ConvertedTokensTable;
 

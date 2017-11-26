@@ -11,13 +11,15 @@
 #include "LexicalAnalyzer.h"
 #include "SyntaxAnalyzer.h"
 #include "Token.h"
+#include "CodeGenerator.h"
 
 
 int main() {
     std::cout << "---------------- Program start ----------------"
               << std::endl;
 
-    const std::string input = "int a; int c(){} int b; int main(){if (a >= c()) {b=2*a;} else b= a;}";
+    // const std::string input = "int a; int main(){a = 2 + 3;}";
+    const std::string input = "int iVarA; bool bFunC(float fVarFf){} int iVarB; int main(bool bVarAaa, int iVarBbb, float fVarCcc){if (true == bFunC()) {iVarB=2*iVarA;} else iVarB= iVarA;}";
     std::cout << "Input: " << input << std::endl;
     std::cout << "---------------- Parsing ----------------"
               << std::endl;
@@ -27,6 +29,11 @@ int main() {
     const bool inputCorrect = sa.parse();
     std::cout << "---------- Result ---------" << std::endl;
     std::cout << "Input " << ((inputCorrect) ? "correct" : "incorrect") << std::endl;
+
+
+    std::cout << "---------- Code Generation ---------" << std::endl;
+    CodeGenerator cg(sa.getRootNode());
+    std::cout << cg.generate();
 
     return 0;
 }
