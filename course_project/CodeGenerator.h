@@ -41,6 +41,16 @@ class CodeGenerator {
         void generateStatementCode(
             std::stringstream& code,
             const Node* statementNode) const;
+        void generateExpressionEvaluation(
+            std::stringstream& code,
+            const Node* expressionRoot) const;
+        // Returns the amount of expressions pushed
+        int generateExpressionListPush(
+            std::stringstream& code,
+            const Node* expressionListRoot) const;
+        void generateFunctionCallCode(
+            std::stringstream& code,
+            const Node* functionNode) const;
 
         // Will safely return if it is not a function declaration
         void generateFunctionDeclarationCode(

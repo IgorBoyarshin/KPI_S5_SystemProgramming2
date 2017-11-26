@@ -10,22 +10,21 @@ CodeGenerator::CodeGenerator(const Node* rootNode)
         // }
         //
 
-        for (const auto& function : m_Functions) {
-            std::cout << "Func: " << function.second[0].second << " "
-                      << function.second[0].first << ": ";
-            for (unsigned int i = 1; i < function.second.size(); i++) {
-                std::cout << " " << function.second[i].second << " "
-                          << function.second[i].first << ", ";
-            }
-            std::cout << std::endl;
-        }
+        // for (const auto& function : m_Functions) {
+        //     std::cout << "Func: " << function.second[0].second << " "
+        //               << function.second[0].first << ": ";
+        //     for (unsigned int i = 1; i < function.second.size(); i++) {
+        //         std::cout << " " << function.second[i].second << " "
+        //                   << function.second[i].first << ", ";
+        //     }
+        //     std::cout << std::endl;
+        // }
     }
 
 
 std::string CodeGenerator::generate() {
     // We know that the top-level entry is either DECLARATION or DECLARATION_LIST.
     // Search among them for function declarations and implement their bodies.
-    // std::vector<const Node*> declarations;
 
     std::stringstream code;
     code << ".386" << std::endl;
@@ -39,7 +38,10 @@ std::string CodeGenerator::generate() {
 
     code << ".code" << std::endl;
     code << std::endl;
-    generateDeclarationCode(code, m_RootNode); // will generate function declarations
+
+    // Will generate function declarations
+    // (which is essentially all there is left to do)
+    generateDeclarationCode(code, m_RootNode);
 
     return code.str();
 }
@@ -61,8 +63,8 @@ void CodeGenerator::generateDeclarationCode(
         return;
     }
 
-    // The type is Declaration
-    // The next function will return safely even if it is not a function declaration
+    // The type is Declaration for sure
+    // The next function will return safely even if it is called upon not a function declaration
     generateFunctionDeclarationCode(code, node);
 }
 
@@ -122,7 +124,6 @@ std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
             std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
                 childDeclarations = getAllFunctionDeclarations(child);
             declarations.insert(
-                    // declarations.end(),
                     childDeclarations.begin(),
                     childDeclarations.end()
             );
@@ -157,7 +158,6 @@ std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
 
 void CodeGenerator::generateVariableDeclarationsCode(std::stringstream& code) const {
     for (const auto& var : m_Variables) {
-        // if (var.second == NodeType_KeywordInt)
         code << "    " << var.first << " " << getAssemblyTypeFor(var.second)
              << " " << getAssemblyZeroFor(var.second) << std::endl;
     }
@@ -177,6 +177,7 @@ void CodeGenerator::generateBlockCode(
     if (blockNode->m_Children.size() == 2) {
         // The {} case.
         // No statements => no code.
+        // No money => no honey.
         return;
     }
 
@@ -218,7 +219,166 @@ void CodeGenerator::generateStatementCode(
         return;
     }
 
-    code << "reached statement" << std::endl;
+    const std::vector<const Node*> children = statementNode->m_Children;
+    const NodeType firstNodeType = children[0]->m_NodeType;
+    switch (firstNodeType) {
+        case NodeType_Block:
+            generateBlockCode(code, children[0]);
+            break;
+        case NodeType_FunctionCallVoid:
+            // TODO
+            break;
+        case NodeType_IdInt: {
+            const Node* expressionRoot = children[2];
+            generateExpressionEvaluation(code, expressionRoot);
+            code << std::endl;
+
+            // The previous function will have stored the result of the
+            // expression in the EAX register
+            // code << shift() << "lea edi, " << children[0]->m_NodeValue << std::endl
+            //      << shift() << "mov dword ptr[edi], eax" << std::endl
+            code << shift() << "mov " << children[0]->m_NodeValue << ", eax" << std::endl
+                 << std::endl;
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+
+// The result of evaluation is always stored in the EAX register
+void CodeGenerator::generateExpressionEvaluation(
+    std::stringstream& code,
+    const Node* expressionRoot) const {
+
+    const NodeType expressionType = expressionRoot->m_NodeType;
+    const std::vector<const Node*> children = expressionRoot->m_Children;
+    const Node* firstNode = children[0];
+    const NodeType firstNodeType = firstNode->m_NodeType;
+    switch (expressionType) {
+        case NodeType_ExpressionFloat:
+        case NodeType_ExpressionInt: {
+            switch (firstNodeType) {
+                case NodeType_IdFloat:
+                case NodeType_IdInt: {
+                    // code << shift() << "lea esi, "
+                    //                 << firstNode->m_NodeValue << "" << std::endl
+                    code << shift() << "mov eax, " << firstNode->m_NodeValue
+                                    << "" << std::endl;
+                    // code << std::endl;
+                    break;
+                }
+                case NodeType_LiteralFloat:
+                case NodeType_LiteralInt: {
+                    code << shift() << "mov eax, " << firstNode->m_NodeValue << std::endl;
+                    // code << std::endl;
+                    break;
+                }
+                case NodeType_FunctionCallFloat:
+                case NodeType_FunctionCallInt:
+                    generateFunctionCallCode(code, firstNode);
+                    break;
+                case NodeType_ParenthesesOpen:
+                    generateExpressionEvaluation(code, children[1]);
+                    break;
+                case NodeType_ExpressionFloat:
+                case NodeType_ExpressionInt: { // arithmetic operations
+                    const Node* operand1 = children[0];
+                    const Node* operand2 = children[2];
+                    const NodeType operation = children[1]->m_NodeType;
+
+                    generateExpressionEvaluation(code, operand2);
+                    code << shift() << "mov ebx, eax" << std::endl;
+                         // << std::endl;
+                    generateExpressionEvaluation(code, operand1);
+
+                    switch (operation) {
+                        case NodeType_OperatorPlus:
+                            code << shift() << "add eax, ebx" << std::endl;
+                            break;
+                        case NodeType_OperatorMinus:
+                            code << shift() << "sub eax, ebx" << std::endl;
+                            break;
+                        case NodeType_OperatorMultiply:
+                            code << shift() << "mul ebx" << std::endl
+                                 << shift() << "mov eax, edx" << std::endl;
+                            break;
+                        case NodeType_OperatorDivide:
+                            code << shift() << "xor edx, edx" << std::endl
+                                 << shift() << "div ebx" << std::endl;
+                            break;
+                        default:
+                            break;
+                    }
+                    // code << std::endl;
+
+                    break;
+                }
+                default:
+                    break;
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+
+// In order to call a function we need to evaluate all arguments(expressions)
+// and push them, then call the function.
+void CodeGenerator::generateFunctionCallCode(
+    std::stringstream& code,
+    const Node* functionNode) const {
+
+    const std::vector<const Node*> children = functionNode->m_Children;
+    const NodeType functionType = functionNode->m_NodeType;
+    const std::string functionName = children[0]->m_NodeValue;
+    // const NodeType functionReturnType = children[0]->m_NodeType;
+    switch (functionType) {
+        case NodeType_FunctionCallInt:
+        case NodeType_FunctionCallFloat:
+        case NodeType_FunctionCallBool:
+        case NodeType_FunctionCallVoid: {
+            const bool argumentsPresent = children.size() > 3;
+            // const Node* expressionListRoot = children[]
+            if (argumentsPresent) {
+                generateExpressionListPush(code, children[2]);
+            }
+            code << shift() << "call " << functionName << std::endl;
+            code << std::endl;
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+
+// Handles individual Expressions as well
+int CodeGenerator::generateExpressionListPush(
+    std::stringstream& code,
+    const Node* expressionListRoot) const {
+    
+    unsigned int pushedExpressions = 0;
+    const NodeType expressionListRootType = expressionListRoot->m_NodeType;
+    if (
+            expressionListRootType == NodeType_ExpressionBool ||
+            expressionListRootType == NodeType_ExpressionInt ||
+            expressionListRootType == NodeType_ExpressionFloat
+        ) {
+        generateExpressionEvaluation(code, expressionListRoot);
+        code << shift() << "push eax" << std::endl;
+        pushedExpressions++;
+    } else if (expressionListRootType == NodeType_ExpressionList) {
+        const Node* child1 = expressionListRoot->m_Children[0];
+        const Node* child2 = expressionListRoot->m_Children[2];
+        pushedExpressions += generateExpressionListPush(code, child1);
+        pushedExpressions += generateExpressionListPush(code, child2);
+    }
+
+    return pushedExpressions;
 }
 
 
@@ -246,32 +406,32 @@ void CodeGenerator::generateFunctionDeclarationCode(
         functionDeclarationNode->m_Children[0]->m_Children[1]->m_NodeValue;
     const std::vector< std::pair<std::string, NodeType> > functionArguments =
         m_Functions.at(functionName);
-    const unsigned int amountOfArguments = functionArguments.size() - 1; // 0th is the return type
+    // const unsigned int amountOfArguments = functionArguments.size() - 1; // 0th is the return type
     // const NodeType functionReturnType = functionArguments[0];
 
     // Function title
     code << functionName << " proc" << std::endl;
-    code << shift() << "push ebp" << std::endl
-         << shift() << "mov ebp, esp" << std::endl;
+    // code << shift() << "push ebp" << std::endl
+    //      << shift() << "mov ebp, esp" << std::endl;
     code << std::endl;
 
     // Retrieve arguments from the srack
-    const unsigned int firstArgShift = (amountOfArguments + 1) * 4;
-    for (unsigned int i = 1; i < functionArguments.size(); i++) {
-        code << shift() << "mov eax, dword ptr[ebp + " << (firstArgShift - (i - 1) * 4) << "]" << std::endl;
-        code << shift() << "lea edi, " << functionArguments[i].first << std::endl;
-        code << shift() << "mov dword ptr[edi], eax" << std::endl;
-        code << std::endl;
-    }
+    // const unsigned int firstArgShift = (amountOfArguments + 1) * 4;
+    // for (unsigned int i = 1; i < functionArguments.size(); i++) {
+    //     code << shift() << "mov eax, dword ptr[ebp + " << (firstArgShift - (i - 1) * 4) << "]" << std::endl;
+    //     code << shift() << "lea edi, " << functionArguments[i].first << std::endl;
+    //     code << shift() << "mov dword ptr[edi], eax" << std::endl;
+    //     code << std::endl;
+    // }
 
     // Generate function body
-    // generateBlockCode(code, lastChildNode);
+    generateBlockCode(code, lastChildNode);
 
 
     // Generate function end
-    code << shift() << "mov esp, ebp" << std::endl
-         << shift() << "pop ebp" << std::endl
-         << shift() << "ret " << (amountOfArguments * 4) << std::endl;
+    // code << shift() << "mov esp, ebp" << std::endl
+    //      << shift() << "pop ebp" << std::endl
+    //      << shift() << "ret " << (amountOfArguments * 4) << std::endl;
     code << functionName << " endp" << std::endl;
     code << std::endl;
 }

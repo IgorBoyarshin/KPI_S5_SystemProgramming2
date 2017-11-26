@@ -18,8 +18,8 @@ int main() {
     std::cout << "---------------- Program start ----------------"
               << std::endl;
 
-    // const std::string input = "int a; int main(){a = 2 + 3;}";
-    const std::string input = "int iVarA; bool bFunC(float fVarFf){} int iVarB; int main(bool bVarAaa, int iVarBbb, float fVarCcc){if (true == bFunC()) {iVarB=2*iVarA;} else iVarB= iVarA;}";
+    const std::string input = "int a; int f(int d, int t){a = 4;} int main(){a = 2 + f(3, 4);}";
+    // const std::string input = "int iVarA; bool bFunC(float fVarFf){} int iVarB; int main(bool bVarAaa, int iVarBbb, float fVarCcc){if (true == bFunC()) {iVarB=2*iVarA;} else iVarB= iVarA;}";
     std::cout << "Input: " << input << std::endl;
     std::cout << "---------------- Parsing ----------------"
               << std::endl;
