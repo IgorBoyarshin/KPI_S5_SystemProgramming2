@@ -15,6 +15,7 @@ class CodeGenerator {
 
         std::string generate();
 
+        bool errorWasFound() const;
 
     private:
         const Node* m_RootNode;
@@ -22,6 +23,7 @@ class CodeGenerator {
         std::vector< std::pair<std::string, NodeType> > m_Variables;
         std::map< std::string, std::vector< std::pair<std::string, NodeType> > > m_Functions;
 
+        mutable bool m_ErrorFound;
 
     private:
         void addVariableDeclaration(const Node* node);
@@ -45,7 +47,7 @@ class CodeGenerator {
             std::stringstream& code,
             const Node* expressionRoot) const;
         // Returns the amount of expressions pushed
-        int generateExpressionListPush(
+        std::vector<NodeType> generateExpressionListPush(
             std::stringstream& code,
             const Node* expressionListRoot) const;
         void generateFunctionCallCode(

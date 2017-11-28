@@ -4,7 +4,7 @@
 CodeGenerator::CodeGenerator(const Node* rootNode)
     : m_RootNode(rootNode),
     m_Variables(getAllVariableDeclarations(rootNode)),
-    m_Functions(getAllFunctionDeclarations(rootNode)) {
+    m_Functions(getAllFunctionDeclarations(rootNode)), m_ErrorFound(false) {
         // for (const auto& pair : m_Variables) {
         //     std::cout << "Var: " << pair.second << " " << pair.first << std::endl;
         // }
@@ -158,7 +158,7 @@ std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
 
 void CodeGenerator::generateVariableDeclarationsCode(std::stringstream& code) const {
     for (const auto& var : m_Variables) {
-        code << "    " << var.first << " " << getAssemblyTypeFor(var.second)
+        code << shift() << var.first << " " << getAssemblyTypeFor(var.second)
              << " " << getAssemblyZeroFor(var.second) << std::endl;
     }
 }
@@ -342,9 +342,23 @@ void CodeGenerator::generateFunctionCallCode(
         case NodeType_FunctionCallBool:
         case NodeType_FunctionCallVoid: {
             const bool argumentsPresent = children.size() > 3;
-            // const Node* expressionListRoot = children[]
+            const auto functionExpectedTypes = m_Functions.at(functionName);
             if (argumentsPresent) {
-                generateExpressionListPush(code, children[2]);
+                const auto types = generateExpressionListPush(code, children[2]);
+                if (functionExpectedTypes.size() - 1 != types.size()) {
+                    m_ErrorFound = true;
+                    std::cout << "[Parse Error]: specified function arguments do not match with those specified at function declaration(for function " << functionName << ")." << std::endl;
+                    return;
+                }
+
+                for (unsigned int i = 0; i < types.size(); i++) {
+                    if (functionExpectedTypes[i+1].second != types[i]) {
+                        m_ErrorFound = true;
+                        std::cout << "[Parse Error]: Specified function arguments do not match with those specified at function declaration(for function " << functionName << ")." << std::endl;
+                        std::cout << "[Parse Error]: Expected:Found: " << functionExpectedTypes[i+1].second << ":" << types[i] << std::endl;
+                        return;
+                    }
+                }
             }
             code << shift() << "call " << functionName << std::endl;
             code << std::endl;
@@ -357,11 +371,12 @@ void CodeGenerator::generateFunctionCallCode(
 
 
 // Handles individual Expressions as well
-int CodeGenerator::generateExpressionListPush(
+// Returns the list of arguments' types
+std::vector<NodeType> CodeGenerator::generateExpressionListPush(
     std::stringstream& code,
     const Node* expressionListRoot) const {
-    
-    unsigned int pushedExpressions = 0;
+
+    std::vector<NodeType> types;
     const NodeType expressionListRootType = expressionListRoot->m_NodeType;
     if (
             expressionListRootType == NodeType_ExpressionBool ||
@@ -370,15 +385,32 @@ int CodeGenerator::generateExpressionListPush(
         ) {
         generateExpressionEvaluation(code, expressionListRoot);
         code << shift() << "push eax" << std::endl;
-        pushedExpressions++;
+
+        if (expressionListRootType == NodeType_ExpressionBool) {
+            types.push_back(NodeType_KeywordBool);
+        } else if (expressionListRootType == NodeType_ExpressionInt) {
+            types.push_back(NodeType_KeywordInt);
+        } else if (expressionListRootType == NodeType_ExpressionFloat) {
+            types.push_back(NodeType_KeywordFloat);
+        }
     } else if (expressionListRootType == NodeType_ExpressionList) {
         const Node* child1 = expressionListRoot->m_Children[0];
         const Node* child2 = expressionListRoot->m_Children[2];
-        pushedExpressions += generateExpressionListPush(code, child1);
-        pushedExpressions += generateExpressionListPush(code, child2);
+        const auto res1 = generateExpressionListPush(code, child1);
+        const auto res2 = generateExpressionListPush(code, child2);
+        types.insert(
+                types.end(),
+                res1.begin(),
+                res1.end()
+        );
+        types.insert(
+                types.end(),
+                res2.begin(),
+                res2.end()
+        );
     }
 
-    return pushedExpressions;
+    return types;
 }
 
 
@@ -406,7 +438,6 @@ void CodeGenerator::generateFunctionDeclarationCode(
         functionDeclarationNode->m_Children[0]->m_Children[1]->m_NodeValue;
     const std::vector< std::pair<std::string, NodeType> > functionArguments =
         m_Functions.at(functionName);
-    // const unsigned int amountOfArguments = functionArguments.size() - 1; // 0th is the return type
     // const NodeType functionReturnType = functionArguments[0];
 
     // Function title
@@ -416,11 +447,13 @@ void CodeGenerator::generateFunctionDeclarationCode(
     code << std::endl;
 
     // Retrieve arguments from the srack
+    // const unsigned int amountOfArguments = functionArguments.size() - 1; // 0th is the return type
     // const unsigned int firstArgShift = (amountOfArguments + 1) * 4;
     // for (unsigned int i = 1; i < functionArguments.size(); i++) {
     //     code << shift() << "mov eax, dword ptr[ebp + " << (firstArgShift - (i - 1) * 4) << "]" << std::endl;
-    //     code << shift() << "lea edi, " << functionArguments[i].first << std::endl;
-    //     code << shift() << "mov dword ptr[edi], eax" << std::endl;
+    //     // code << shift() << "lea edi, " << functionArguments[i].first << std::endl;
+    //     // code << shift() << "mov dword ptr[edi], eax" << std::endl;
+    //     code << shift() << "mov " << functionArguments[i].first << ", eax" << std::endl;
     //     code << std::endl;
     // }
 
@@ -469,4 +502,9 @@ std::string CodeGenerator::getAssemblyZeroFor(NodeType nodeType) const {
 
 std::string CodeGenerator::shift() const {
     return "    ";
+}
+
+
+bool CodeGenerator::errorWasFound() const {
+    return m_ErrorFound;
 }

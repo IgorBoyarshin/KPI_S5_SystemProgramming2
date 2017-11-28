@@ -242,6 +242,7 @@ bool SyntaxAnalyzer::reduceIfCan() {
     //     std::cout << node->m_NodeType << " ";
     // }
     // std::cout << std::endl;
+    //
 
     const unsigned int patternSize = std::get<0>(firstReductionPattern).size();
     const unsigned int startIndex = m_Nodes.size() - patternSize;
@@ -268,6 +269,7 @@ bool SyntaxAnalyzer::reduceIfCan() {
     //     std::cout << node->m_NodeType << " ";
     // }
     // std::cout << std::endl;
+    //
 
     return true;
 }

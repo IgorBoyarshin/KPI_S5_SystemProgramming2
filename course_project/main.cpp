@@ -18,7 +18,7 @@ int main() {
     std::cout << "---------------- Program start ----------------"
               << std::endl;
 
-    const std::string input = "int a; int f(int d, int t){a = 4;} int main(){a = 2 + f(3, 4);}";
+    const std::string input = "int a; int f(bool rr, int d, float t){a = 4;} int main(){a = 2 + f(true, 8, 5.1);}";
     // const std::string input = "int iVarA; bool bFunC(float fVarFf){} int iVarB; int main(bool bVarAaa, int iVarBbb, float fVarCcc){if (true == bFunC()) {iVarB=2*iVarA;} else iVarB= iVarA;}";
     std::cout << "Input: " << input << std::endl;
     std::cout << "---------------- Parsing ----------------"
@@ -31,9 +31,12 @@ int main() {
     std::cout << "Input " << ((inputCorrect) ? "correct" : "incorrect") << std::endl;
 
 
-    std::cout << "---------- Code Generation ---------" << std::endl;
     CodeGenerator cg(sa.getRootNode());
-    std::cout << cg.generate();
+    const auto code = cg.generate();
+    std::cout << "---------- Code Generation ---------" << std::endl;
+    if (!cg.errorWasFound()) {
+        std::cout << code;
+    }
 
     return 0;
 }

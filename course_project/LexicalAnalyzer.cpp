@@ -123,7 +123,7 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
                     }
 
                     accumulator += c;
-                } else if (isNumber(c)) {
+                } else if (isNumber(c) || c == '.') {
                     if (accumulator.size() == 0) {
                         accumulatingNumber = true;
                     }
@@ -141,14 +141,16 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
             if (accumulating) {
                 // flush the accumulator
                 if (accumulatingNumber) {
-                    m_TokensTable.emplace_back(TokenType_LiteralInt, accumulator);
+                    if (accumulator.find('.') != std::string::npos) {
+                        // TODO: prone to be incorrect
+                        m_TokensTable.emplace_back(TokenType_LiteralFloat, accumulator);
+                    } else {
+                        m_TokensTable.emplace_back(TokenType_LiteralInt, accumulator);
+                    }
                 } else {
                     if (accumulator.compare("true") == 0 ||
                             accumulator.compare("false") == 0) {
                         m_TokensTable.emplace_back(TokenType_LiteralBool, accumulator);
-                    } else if (accumulator.find('.') != std::string::npos) {
-                        // TODO: prone to be incorrect
-                        m_TokensTable.emplace_back(TokenType_LiteralFloat, accumulator);
                     } else {
                         const TokenType keyword = getIfKeyword(accumulator);
                         m_TokensTable.emplace_back(
