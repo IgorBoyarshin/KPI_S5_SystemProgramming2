@@ -24,6 +24,7 @@ class CodeGenerator {
         std::map< std::string, std::vector< std::pair<std::string, NodeType> > > m_Functions;
 
         mutable bool m_ErrorFound;
+        mutable unsigned int m_NextAvailablyLoopIndex;
 
     private:
         void addVariableDeclaration(const Node* node);

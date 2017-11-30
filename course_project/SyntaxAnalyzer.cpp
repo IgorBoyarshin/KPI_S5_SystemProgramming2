@@ -224,6 +224,48 @@ bool SyntaxAnalyzer::reduceIfCan() {
     }
 
 
+    // If it wants to reduce into a bool EXPR => don't allow if
+    // there is an arithmetic operator coming up next.
+    if (std::get<1>(firstReductionPattern) == NodeType_ExpressionBool) {
+        const unsigned int indexOfPotentialOperator = m_NextTokensTableIndex + 0;
+        if (indexOfPotentialOperator < m_ConvertedTokensTable.size()) {
+            const NodeType operatorType =
+                m_ConvertedTokensTable.at(indexOfPotentialOperator).m_NodeType;
+            if (
+                    operatorType == NodeType_OperatorPlus ||
+                    operatorType == NodeType_OperatorMinus ||
+                    operatorType == NodeType_OperatorMultiply ||
+                    operatorType == NodeType_OperatorDivide ||
+                    operatorType == NodeType_OperatorLess ||
+                    operatorType == NodeType_OperatorLessOrEquals ||
+                    operatorType == NodeType_OperatorGreater ||
+                    operatorType == NodeType_OperatorGreaterOrEquals
+                    ) {
+                return false;
+            }
+        }
+    }
+
+
+    // If it wants to reduce the (+) or (-) operator => don't allow if there
+    // is an (*) or (/) operator coming up next
+    // if (std::get<0>(firstReductionPattern).size() > 0) {
+    //     if (std::get<0>(firstReductionPattern).at(1) == NodeType_OperatorPlus ||
+    //             std::get<0>(firstReductionPattern).at(1) == NodeType_OperatorMinus) {
+    //         const unsigned int indexOfPotentialMoreSignificantOperator = m_NextTokensTableIndex;
+    //         if (indexOfPotentialMoreSignificantOperator < m_ConvertedTokensTable.size()) {
+    //             const NodeType operatorType =
+    //                 m_ConvertedTokensTable.at(indexOfPotentialMoreSignificantOperator).m_NodeType;
+    //             if (
+    //                     operatorType == NodeType_OperatorMultiply ||
+    //                     operatorType == NodeType_OperatorDivide
+    //                     ) {
+    //                 return false;
+    //             }
+    //         }
+    //     }
+    // }
+
     // If it wants to reduce onto IF => allow only if there is no
     // following ELSE(otherwise force IF_ELSE). The size of the IF pattern is 5
     if (std::get<0>(firstReductionPattern).at(0) == NodeType_KeywordIf
@@ -237,12 +279,12 @@ bool SyntaxAnalyzer::reduceIfCan() {
     // Alles gut => pick the best(first is best) pattern
     // std::cout << "Doing it" << std::endl;
 
-    // std::cout << ":> Before reduction: ";
-    // for (const Node* node : m_Nodes) {
-    //     std::cout << node->m_NodeType << " ";
-    // }
-    // std::cout << std::endl;
-    //
+    std::cout << ":> Before reduction: ";
+    for (const Node* node : m_Nodes) {
+        std::cout << node->m_NodeType << " ";
+    }
+    std::cout << std::endl;
+
 
     const unsigned int patternSize = std::get<0>(firstReductionPattern).size();
     const unsigned int startIndex = m_Nodes.size() - patternSize;
@@ -264,12 +306,12 @@ bool SyntaxAnalyzer::reduceIfCan() {
         children
     ));
 
-    // std::cout << ":> After reduction: ";
-    // for (const Node* node : m_Nodes) {
-    //     std::cout << node->m_NodeType << " ";
-    // }
-    // std::cout << std::endl;
-    //
+    std::cout << ":> After reduction: ";
+    for (const Node* node : m_Nodes) {
+        std::cout << node->m_NodeType << " ";
+    }
+    std::cout << std::endl;
+
 
     return true;
 }

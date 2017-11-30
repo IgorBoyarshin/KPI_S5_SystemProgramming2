@@ -1,9 +1,9 @@
 /*
  * System Programming
- * "Syntax Analyzer"
+ * "Compiler from C to x86 Assembly"
  *
  * Author: Igor Boyarshin, #5207, IO-52, FIOT
- * Date: 19.11.17
+ * Date: 30.11.17
  */
 
 #include <iostream>
@@ -18,7 +18,7 @@ int main() {
     std::cout << "---------------- Program start ----------------"
               << std::endl;
 
-    const std::string input = "int a; int f(bool rr, int d, float t){a = 4;} int main(){a = 2 + f(true, 8, 5.1);}";
+    const std::string input = "int a; void ff(bool bb){a=9;} int f(bool rr, int d, float t){ff(3.2 == 3.3 + 1.1);} int main(){if (3>2) {a=2;} else a=3; a = 2 + f(5 > 6, 8, 5.1);}";
     // const std::string input = "int iVarA; bool bFunC(float fVarFf){} int iVarB; int main(bool bVarAaa, int iVarBbb, float fVarCcc){if (true == bFunC()) {iVarB=2*iVarA;} else iVarB= iVarA;}";
     std::cout << "Input: " << input << std::endl;
     std::cout << "---------------- Parsing ----------------"

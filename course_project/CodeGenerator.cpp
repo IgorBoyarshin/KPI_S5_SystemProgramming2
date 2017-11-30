@@ -4,7 +4,8 @@
 CodeGenerator::CodeGenerator(const Node* rootNode)
     : m_RootNode(rootNode),
     m_Variables(getAllVariableDeclarations(rootNode)),
-    m_Functions(getAllFunctionDeclarations(rootNode)), m_ErrorFound(false) {
+    m_Functions(getAllFunctionDeclarations(rootNode)), m_ErrorFound(false),
+    m_NextAvailablyLoopIndex(0) {
         // for (const auto& pair : m_Variables) {
         //     std::cout << "Var: " << pair.second << " " << pair.first << std::endl;
         // }
@@ -69,93 +70,6 @@ void CodeGenerator::generateDeclarationCode(
 }
 
 
-std::vector< std::pair<std::string, NodeType> >
-    CodeGenerator::getAllVariableDeclarations(const Node* parentNode) const {
-
-    std::vector< std::pair<std::string, NodeType> > declarations;
-
-    const std::vector<const Node*> children = parentNode->m_Children;
-    for (unsigned int index = 0; index < children.size(); index++) {
-        const Node* child = children[index];
-
-        if (
-                child->m_NodeType == NodeType_Declaration ||
-                child->m_NodeType == NodeType_DeclarationList ||
-                child->m_NodeType == NodeType_TypedIdList
-           ) {
-            const std::vector< std::pair<std::string, NodeType> >
-                childDeclarations = getAllVariableDeclarations(child);
-            declarations.insert(
-                    declarations.end(),
-                    childDeclarations.begin(),
-                    childDeclarations.end()
-            );
-        } else if (child->m_NodeType == NodeType_TypedId) {
-            const bool functionId = (index + 1) < children.size() &&
-                children[index + 1]->m_NodeType == NodeType_ParenthesesOpen;
-            // std::cout << "Found: " << typedIdChildren[0]->m_NodeType << " "
-                // << typedIdChildren[1]->m_NodeValue << ", func: " << functionId << std::endl;
-            if (!functionId) {
-                const std::vector<const Node*> typedIdChildren = child->m_Children;
-                const NodeType type = typedIdChildren[0]->m_NodeType;
-                const std::string name = typedIdChildren[1]->m_NodeValue;
-                declarations.push_back(std::pair<std::string, NodeType>(name, type));
-            }
-        }
-    }
-
-    return declarations;
-}
-
-std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
-    CodeGenerator::getAllFunctionDeclarations(const Node* parentNode) const {
-
-    std::map< std::string, std::vector< std::pair<std::string, NodeType> > > declarations;
-
-    const std::vector<const Node*> children = parentNode->m_Children;
-    for (unsigned int index = 0; index < children.size(); index++) {
-        const Node* child = children[index];
-
-        if (
-                child->m_NodeType == NodeType_Declaration ||
-                child->m_NodeType == NodeType_DeclarationList ||
-                child->m_NodeType == NodeType_TypedIdList
-           ) {
-            std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
-                childDeclarations = getAllFunctionDeclarations(child);
-            declarations.insert(
-                    childDeclarations.begin(),
-                    childDeclarations.end()
-            );
-        } else if (child->m_NodeType == NodeType_TypedId) {
-            const bool functionId = (index + 1) < children.size() &&
-                children[index + 1]->m_NodeType == NodeType_ParenthesesOpen;
-            if (functionId) {
-                const std::vector<const Node*> typedIdChildren = child->m_Children;
-                const NodeType functionType = typedIdChildren[0]->m_NodeType;
-                const std::string functionName = typedIdChildren[1]->m_NodeValue;
-                // declarations.push_back(std::pair<std::string, NodeType>(name, type));
-                const std::vector<std::pair<std::string, NodeType>> variableDeclarations =
-                    getAllVariableDeclarations(parentNode);
-                std::vector< std::pair<std::string, NodeType> > arguments;
-                arguments.push_back(std::pair<std::string, NodeType>(functionName, functionType)); // the 0th type is the function's return type
-                for (const auto& argument : variableDeclarations) {
-                    arguments.push_back(std::pair<std::string, NodeType>(
-                        argument.first, argument.second
-                    ));
-                }
-                declarations.insert(
-                    std::pair<std::string, std::vector< std::pair<std::string, NodeType>> >(
-                        functionName, arguments
-                ));
-            }
-        }
-    }
-
-    return declarations;
-}
-
-
 void CodeGenerator::generateVariableDeclarationsCode(std::stringstream& code) const {
     for (const auto& var : m_Variables) {
         code << shift() << var.first << " " << getAssemblyTypeFor(var.second)
@@ -211,6 +125,7 @@ void CodeGenerator::generateStatementListCode(
 }
 
 
+// TODO: if
 void CodeGenerator::generateStatementCode(
     std::stringstream& code,
     const Node* statementNode) const {
@@ -226,9 +141,9 @@ void CodeGenerator::generateStatementCode(
             generateBlockCode(code, children[0]);
             break;
         case NodeType_FunctionCallVoid:
-            // TODO
+            generateFunctionCallCode(code, children[0]);
             break;
-        case NodeType_IdInt: {
+        case NodeType_IdInt: { // assignment
             const Node* expressionRoot = children[2];
             generateExpressionEvaluation(code, expressionRoot);
             code << std::endl;
@@ -241,6 +156,30 @@ void CodeGenerator::generateStatementCode(
                  << std::endl;
             break;
         }
+        case NodeType_KeywordIf:
+            if (children.size() >= 5) { //if statement OR ifelse statement
+                // Generate the first part
+                generateExpressionEvaluation(code, children[2]);
+                code << shift() << "cmp eax, 1" << std::endl
+                     << shift() << "jne loop" << m_NextAvailablyLoopIndex << std::endl;
+                generateStatementCode(code, children[4]);
+                code << std::endl;
+                m_NextAvailablyLoopIndex++;
+                code << shift() << "jmp loop" << m_NextAvailablyLoopIndex << std::endl;
+            }
+
+            code << "loop" << (m_NextAvailablyLoopIndex - 1) << ":" << std::endl;
+            m_NextAvailablyLoopIndex++;
+
+            if (children.size() == 7) { // ifelse statement
+                // Generate the 'else' part if it exists(if size == 7)
+                generateStatementCode(code, children[6]);
+                code << "loop" << (m_NextAvailablyLoopIndex - 1) << ":" << std::endl;
+                code << std::endl;
+                m_NextAvailablyLoopIndex++;
+            }
+            break;
+
         default:
             break;
     }
@@ -257,9 +196,11 @@ void CodeGenerator::generateExpressionEvaluation(
     const Node* firstNode = children[0];
     const NodeType firstNodeType = firstNode->m_NodeType;
     switch (expressionType) {
+        case NodeType_ExpressionBool:
         case NodeType_ExpressionFloat:
         case NodeType_ExpressionInt: {
             switch (firstNodeType) {
+                case NodeType_IdBool:
                 case NodeType_IdFloat:
                 case NodeType_IdInt: {
                     // code << shift() << "lea esi, "
@@ -269,12 +210,22 @@ void CodeGenerator::generateExpressionEvaluation(
                     // code << std::endl;
                     break;
                 }
+                case NodeType_LiteralBool:
+                    code << shift() << "mov eax, ";
+                    if (firstNode->m_NodeValue == "true") {
+                       code << "1";
+                    } else if (firstNode->m_NodeValue == "false"){
+                       code << "0";
+                    }
+                    code << std::endl;
+                    break;
                 case NodeType_LiteralFloat:
                 case NodeType_LiteralInt: {
                     code << shift() << "mov eax, " << firstNode->m_NodeValue << std::endl;
                     // code << std::endl;
                     break;
                 }
+                case NodeType_FunctionCallBool:
                 case NodeType_FunctionCallFloat:
                 case NodeType_FunctionCallInt:
                     generateFunctionCallCode(code, firstNode);
@@ -282,6 +233,7 @@ void CodeGenerator::generateExpressionEvaluation(
                 case NodeType_ParenthesesOpen:
                     generateExpressionEvaluation(code, children[1]);
                     break;
+                case NodeType_ExpressionBool:
                 case NodeType_ExpressionFloat:
                 case NodeType_ExpressionInt: { // arithmetic operations
                     const Node* operand1 = children[0];
@@ -293,20 +245,96 @@ void CodeGenerator::generateExpressionEvaluation(
                          // << std::endl;
                     generateExpressionEvaluation(code, operand1);
 
+                    // The arguments are now in EAX and EBX
+
+                    std::string addedF(operand1->m_NodeType == NodeType_ExpressionFloat ? "f" : "");
                     switch (operation) {
                         case NodeType_OperatorPlus:
-                            code << shift() << "add eax, ebx" << std::endl;
+                            code << shift() << addedF << "add eax, ebx" << std::endl;
                             break;
                         case NodeType_OperatorMinus:
-                            code << shift() << "sub eax, ebx" << std::endl;
+                            code << shift() << addedF <<  "sub eax, ebx" << std::endl;
                             break;
                         case NodeType_OperatorMultiply:
-                            code << shift() << "mul ebx" << std::endl
+                            code << shift() << addedF << "mul ebx" << std::endl
                                  << shift() << "mov eax, edx" << std::endl;
                             break;
                         case NodeType_OperatorDivide:
                             code << shift() << "xor edx, edx" << std::endl
-                                 << shift() << "div ebx" << std::endl;
+                                 << shift() << addedF << "div ebx" << std::endl;
+                            break;
+
+                        case NodeType_OperatorEquals:
+                            code << shift() << addedF << "cmp eax, ebx" << std::endl;
+                            code << shift() << "je loop" << m_NextAvailablyLoopIndex << std::endl;
+                            // Not equals
+                            code << shift() << "mov eax, 0" << std::endl;
+                            code << shift() << "jmp loop" << (m_NextAvailablyLoopIndex + 1) << std::endl;
+                            // Equals
+                            code << "loop" << m_NextAvailablyLoopIndex << ":" << std::endl;
+                            code << shift() << "mov eax, 1" << std::endl;
+                            code << "loop" << (m_NextAvailablyLoopIndex + 1) << ":" << std::endl;
+                            m_NextAvailablyLoopIndex += 2;
+                            break;
+                        case NodeType_OperatorNotEquals:
+                            code << shift() << addedF << "cmp eax, ebx" << std::endl;
+                            code << shift() << "je loop" << m_NextAvailablyLoopIndex << std::endl;
+                            // Not equals
+                            code << shift() << "mov eax, 1" << std::endl;
+                            code << shift() << "jmp loop" << (m_NextAvailablyLoopIndex + 1) << std::endl;
+                            // Equals
+                            code << "loop" << m_NextAvailablyLoopIndex << ":" << std::endl;
+                            code << shift() << "mov eax, 0" << std::endl;
+                            code << "loop" << (m_NextAvailablyLoopIndex + 1) << ":" << std::endl;
+                            m_NextAvailablyLoopIndex += 2;
+                            break;
+                        case NodeType_OperatorLess:
+                            code << shift() << addedF << "cmp eax, ebx" << std::endl;
+                            code << shift() << "jl loop" << m_NextAvailablyLoopIndex << std::endl;
+                            // False
+                            code << shift() << "mov eax, 0" << std::endl;
+                            code << shift() << "jmp loop" << (m_NextAvailablyLoopIndex + 1) << std::endl;
+                            // True
+                            code << "loop" << m_NextAvailablyLoopIndex << ":" << std::endl;
+                            code << shift() << "mov eax, 1" << std::endl;
+                            code << "loop" << (m_NextAvailablyLoopIndex + 1) << ":" << std::endl;
+                            m_NextAvailablyLoopIndex += 2;
+                            break;
+                        case NodeType_OperatorGreater:
+                            code << shift() << addedF << "cmp eax, ebx" << std::endl;
+                            code << shift() << "jg loop" << m_NextAvailablyLoopIndex << std::endl;
+                            // False
+                            code << shift() << "mov eax, 0" << std::endl;
+                            code << shift() << "jmp loop" << (m_NextAvailablyLoopIndex + 1) << std::endl;
+                            // True
+                            code << "loop" << m_NextAvailablyLoopIndex << ":" << std::endl;
+                            code << shift() << "mov eax, 1" << std::endl;
+                            code << "loop" << (m_NextAvailablyLoopIndex + 1) << ":" << std::endl;
+                            m_NextAvailablyLoopIndex += 2;
+                            break;
+                        case NodeType_OperatorLessOrEquals:
+                            code << shift() << addedF << "cmp eax, ebx" << std::endl;
+                            code << shift() << "jle loop" << m_NextAvailablyLoopIndex << std::endl;
+                            // False
+                            code << shift() << "mov eax, 0" << std::endl;
+                            code << shift() << "jmp loop" << (m_NextAvailablyLoopIndex + 1) << std::endl;
+                            // True
+                            code << "loop" << m_NextAvailablyLoopIndex << ":" << std::endl;
+                            code << shift() << "mov eax, 1" << std::endl;
+                            code << "loop" << (m_NextAvailablyLoopIndex + 1) << ":" << std::endl;
+                            m_NextAvailablyLoopIndex += 2;
+                            break;
+                        case NodeType_OperatorGreaterOrEquals:
+                            code << shift() << addedF << "cmp eax, ebx" << std::endl;
+                            code << shift() << "jge loop" << m_NextAvailablyLoopIndex << std::endl;
+                            // False
+                            code << shift() << "mov eax, 0" << std::endl;
+                            code << shift() << "jmp loop" << (m_NextAvailablyLoopIndex + 1) << std::endl;
+                            // True
+                            code << "loop" << m_NextAvailablyLoopIndex << ":" << std::endl;
+                            code << shift() << "mov eax, 1" << std::endl;
+                            code << "loop" << (m_NextAvailablyLoopIndex + 1) << ":" << std::endl;
+                            m_NextAvailablyLoopIndex += 2;
                             break;
                         default:
                             break;
@@ -447,15 +475,15 @@ void CodeGenerator::generateFunctionDeclarationCode(
     code << std::endl;
 
     // Retrieve arguments from the srack
-    // const unsigned int amountOfArguments = functionArguments.size() - 1; // 0th is the return type
-    // const unsigned int firstArgShift = (amountOfArguments + 1) * 4;
-    // for (unsigned int i = 1; i < functionArguments.size(); i++) {
-    //     code << shift() << "mov eax, dword ptr[ebp + " << (firstArgShift - (i - 1) * 4) << "]" << std::endl;
-    //     // code << shift() << "lea edi, " << functionArguments[i].first << std::endl;
-    //     // code << shift() << "mov dword ptr[edi], eax" << std::endl;
-    //     code << shift() << "mov " << functionArguments[i].first << ", eax" << std::endl;
-    //     code << std::endl;
-    // }
+    const unsigned int amountOfArguments = functionArguments.size() - 1; // 0th is the return type
+    const unsigned int firstArgShift = (amountOfArguments + 1) * 4;
+    for (unsigned int i = 1; i < functionArguments.size(); i++) {
+        code << shift() << "mov eax, dword ptr[ebp + " << (firstArgShift - (i - 1) * 4) << "]" << std::endl;
+        // code << shift() << "lea edi, " << functionArguments[i].first << std::endl;
+        // code << shift() << "mov dword ptr[edi], eax" << std::endl;
+        code << shift() << "mov " << functionArguments[i].first << ", eax" << std::endl;
+        code << std::endl;
+    }
 
     // Generate function body
     generateBlockCode(code, lastChildNode);
@@ -471,6 +499,91 @@ void CodeGenerator::generateFunctionDeclarationCode(
 
 
 
+std::vector< std::pair<std::string, NodeType> >
+    CodeGenerator::getAllVariableDeclarations(const Node* parentNode) const {
+
+    std::vector< std::pair<std::string, NodeType> > declarations;
+
+    const std::vector<const Node*> children = parentNode->m_Children;
+    for (unsigned int index = 0; index < children.size(); index++) {
+        const Node* child = children[index];
+
+        if (
+                child->m_NodeType == NodeType_Declaration ||
+                child->m_NodeType == NodeType_DeclarationList ||
+                child->m_NodeType == NodeType_TypedIdList
+           ) {
+            const std::vector< std::pair<std::string, NodeType> >
+                childDeclarations = getAllVariableDeclarations(child);
+            declarations.insert(
+                    declarations.end(),
+                    childDeclarations.begin(),
+                    childDeclarations.end()
+            );
+        } else if (child->m_NodeType == NodeType_TypedId) {
+            const bool functionId = (index + 1) < children.size() &&
+                children[index + 1]->m_NodeType == NodeType_ParenthesesOpen;
+            // std::cout << "Found: " << typedIdChildren[0]->m_NodeType << " "
+                // << typedIdChildren[1]->m_NodeValue << ", func: " << functionId << std::endl;
+            if (!functionId) {
+                const std::vector<const Node*> typedIdChildren = child->m_Children;
+                const NodeType type = typedIdChildren[0]->m_NodeType;
+                const std::string name = typedIdChildren[1]->m_NodeValue;
+                declarations.push_back(std::pair<std::string, NodeType>(name, type));
+            }
+        }
+    }
+
+    return declarations;
+}
+
+std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
+    CodeGenerator::getAllFunctionDeclarations(const Node* parentNode) const {
+
+    std::map< std::string, std::vector< std::pair<std::string, NodeType> > > declarations;
+
+    const std::vector<const Node*> children = parentNode->m_Children;
+    for (unsigned int index = 0; index < children.size(); index++) {
+        const Node* child = children[index];
+
+        if (
+                child->m_NodeType == NodeType_Declaration ||
+                child->m_NodeType == NodeType_DeclarationList ||
+                child->m_NodeType == NodeType_TypedIdList
+           ) {
+            std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
+                childDeclarations = getAllFunctionDeclarations(child);
+            declarations.insert(
+                    childDeclarations.begin(),
+                    childDeclarations.end()
+            );
+        } else if (child->m_NodeType == NodeType_TypedId) {
+            const bool functionId = (index + 1) < children.size() &&
+                children[index + 1]->m_NodeType == NodeType_ParenthesesOpen;
+            if (functionId) {
+                const std::vector<const Node*> typedIdChildren = child->m_Children;
+                const NodeType functionType = typedIdChildren[0]->m_NodeType;
+                const std::string functionName = typedIdChildren[1]->m_NodeValue;
+                // declarations.push_back(std::pair<std::string, NodeType>(name, type));
+                const std::vector<std::pair<std::string, NodeType>> variableDeclarations =
+                    getAllVariableDeclarations(parentNode);
+                std::vector< std::pair<std::string, NodeType> > arguments;
+                arguments.push_back(std::pair<std::string, NodeType>(functionName, functionType)); // the 0th type is the function's return type
+                for (const auto& argument : variableDeclarations) {
+                    arguments.push_back(std::pair<std::string, NodeType>(
+                        argument.first, argument.second
+                    ));
+                }
+                declarations.insert(
+                    std::pair<std::string, std::vector< std::pair<std::string, NodeType>> >(
+                        functionName, arguments
+                ));
+            }
+        }
+    }
+
+    return declarations;
+}
 
 
 std::string CodeGenerator::getAssemblyTypeFor(NodeType nodeType) const {
