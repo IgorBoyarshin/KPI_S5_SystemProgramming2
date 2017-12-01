@@ -1,18 +1,6 @@
 #include "NodeType.h"
 
 
-// Caution: not generalized
-// unsigned int stringToInt(const std::string& str) {
-//     unsigned int number = 0;
-//     const unsigned int length = str.size();
-//     for (unsigned int i = 0; i < length; i++) {
-//         number = 10 * number + str[length - i - 1];
-//     }
-//
-//     return number;
-// }
-
-
 NodeType getNodeTypeFromString(const std::string& str) {
     if (str.compare("ID_UNDEFINED") == 0) {
         return NodeType_IdUndefined;

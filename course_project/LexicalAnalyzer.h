@@ -3,9 +3,10 @@
 
 #include <vector>
 #include <string>
+#include <string>
 #include "TokenType.h"
 #include "Token.h"
-#include <string>
+
 
 class LexicalAnalyzer {
     public:

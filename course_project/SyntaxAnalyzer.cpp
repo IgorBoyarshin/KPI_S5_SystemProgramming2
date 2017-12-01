@@ -5,7 +5,6 @@ SyntaxAnalyzer::SyntaxAnalyzer(
         const std::vector<Token> tokensTable) :
     m_ConvertedTokensTable(std::vector<Node>()),
     m_NextTokensTableIndex(0),
-    // m_CurrentContext(Context()),
     m_IdsTable(std::map<std::string, std::vector<NodeType>>()),
     m_ReductionPatterns(readReductionPatterns("rules.txt")),
     m_AllowedSequences(readAllowedSequences("sequences.txt"))
@@ -88,7 +87,7 @@ std::vector<ReductionPattern> SyntaxAnalyzer::getPotentialReductionPatterns() co
 bool SyntaxAnalyzer::reduceIfCan() {
     const std::vector<ReductionPattern> potentialReductionPatterns = getPotentialReductionPatterns();
     if (potentialReductionPatterns.size() == 0) {
-        // Can't reduce => continue
+        // Can't reduce => nothing to do here
         return false;
     }
 
@@ -97,7 +96,6 @@ bool SyntaxAnalyzer::reduceIfCan() {
     const NodeType currentNodeType = currentNode->m_NodeType;
     const Node* const nextNode = peekNext();
     const ReductionPattern firstReductionPattern = potentialReductionPatterns.at(0);
-    // const NodeType nextNodeType = (nextNode) ? nextNode->m_NodeType : NodeType_Undefined;
 
     // std::cout << "Could reduce into: ";
     // for (ReductionPattern rp : potentialReductionPatterns) {
@@ -118,14 +116,14 @@ bool SyntaxAnalyzer::reduceIfCan() {
             std::get<1>(firstReductionPattern) == NodeType_TypedId;
 
         if (knownId && idDeclaration) {
-            std::cerr << "[Parse Error]: Redeclaration of Id: '"
+            std::cerr << ":> [Parse Error]: Redeclaration of Id: '"
                       << idValue << "'"
                       << std::endl;
             return false;
         }
 
         if (!knownId && !idDeclaration) {
-            std::cerr << "[Parse Error]: Usage of undeclared Id: '"
+            std::cerr << ":> [Parse Error]: Usage of undeclared Id: '"
                       << idValue << "'"
                       << std::endl;
             return false;
@@ -141,9 +139,6 @@ bool SyntaxAnalyzer::reduceIfCan() {
                 )
             );
 
-            // std::cout << ":> Adding '" << previousNodeType << " "
-            //           << idValue << "' to the IDs table" << std::endl;
-
             // Now continue(will be reduced)
         } else { // knownId
             // So, this is a valid usage of an ID. We need to convert it into the
@@ -157,40 +152,31 @@ bool SyntaxAnalyzer::reduceIfCan() {
                         NodeType_IdVoid,
                         idValue
                     );
-                    // std::cout << ":> Converting '" << idValue << "' into VOID"
-                    //           << std::endl;
                     break;
                 case NodeType_KeywordBool:
                     m_Nodes[currentNodeIndex] = new Node(
                         NodeType_IdBool,
                         idValue
                     );
-                    // std::cout << ":> Converting '" << idValue << "' into BOOL"
-                    //           << std::endl;
                     break;
                 case NodeType_KeywordInt:
                     m_Nodes[currentNodeIndex] = new Node(
                         NodeType_IdInt,
                         idValue
                     );
-                    // std::cout << ":> Converting '" << idValue << "' into INT"
-                    //           << std::endl;
                     break;
                 case NodeType_KeywordFloat:
                     m_Nodes[currentNodeIndex] = new Node(
                         NodeType_IdFloat,
                         idValue
                     );
-                    // std::cout << ":> Converting '" << idValue << "' into FLOAT"
-                    //           << std::endl;
                     break;
                 default:
-                    std::cerr << "[Parse Error]: reduceIfCan(): Invalid Type for ID: "
+                    std::cerr << ":> [Parse Error]: reduceIfCan(): Invalid Type for ID: "
                               << idType
                               << std::endl;
                     return false;
             }
-
 
             // Current reduction is done
             return true;
@@ -247,6 +233,7 @@ bool SyntaxAnalyzer::reduceIfCan() {
     }
 
 
+    // TODO: implement
     // If it wants to reduce the (+) or (-) operator => don't allow if there
     // is an (*) or (/) operator coming up next
     // if (std::get<0>(firstReductionPattern).size() > 0) {
@@ -277,25 +264,20 @@ bool SyntaxAnalyzer::reduceIfCan() {
     }
 
     // Alles gut => pick the best(first is best) pattern
-    // std::cout << "Doing it" << std::endl;
 
-    std::cout << ":> Before reduction: ";
-    for (const Node* node : m_Nodes) {
-        std::cout << node->m_NodeType << " ";
-    }
-    std::cout << std::endl;
-
+    // std::cout << ":> Before reduction: ";
+    // for (const Node* node : m_Nodes) {
+    //     std::cout << node->m_NodeType << " ";
+    // }
+    // std::cout << std::endl;
+    //
 
     const unsigned int patternSize = std::get<0>(firstReductionPattern).size();
     const unsigned int startIndex = m_Nodes.size() - patternSize;
-    // std::cout << "par size: " << patternSize << " ; st index: " << startIndex << std::endl;
     std::vector<const Node*> children;
-    // std::cout << "Children: ";
     for (unsigned int i = startIndex; i < startIndex + patternSize; i++) {
         children.push_back(m_Nodes[i]);
-        // std::cout << m_Nodes[i]->m_NodeType << " ";
     }
-    // std::cout << std::endl;
 
     // Remove the reduced part
     m_Nodes.erase(m_Nodes.begin() + startIndex, m_Nodes.end());
@@ -306,52 +288,28 @@ bool SyntaxAnalyzer::reduceIfCan() {
         children
     ));
 
-    std::cout << ":> After reduction: ";
-    for (const Node* node : m_Nodes) {
-        std::cout << node->m_NodeType << " ";
-    }
-    std::cout << std::endl;
-
+    // std::cout << ":> After reduction: ";
+    // for (const Node* node : m_Nodes) {
+    //     std::cout << node->m_NodeType << " ";
+    // }
+    // std::cout << std::endl;
+    //
 
     return true;
 }
 
 bool SyntaxAnalyzer::parse() {
-    // Node* nodePrevious = nullptr;
     while (peekNext()) {
-        // const Node* nodePrevious =
-        //     m_Nodes.size() == 0 ? nullptr : m_Nodes[m_Nodes.size() - 1];
         const Node* nodeCurrent = getNext();
-        // std::cout << "Read Token: " << nodeCurrent->m_NodeType << std::endl;
-        // if (!isAllowed(
-        //         nodePrevious->m_NodeType,
-        //         nodeCurrent.m_NodeType,
-        //         m_CurrentContext)) {
-        //
-        //     std::cout << "[Parse error]: Unexpected token \""
-        //               << *nodePrevious << "\" after \""
-        //               << nodeCurrent << "\"." << std::endl;
-        // }
-
         m_Nodes.push_back(nodeCurrent);
-
-        // std::cout << ":> Now have: ";
-        // for (const Node* node : m_Nodes) {
-        //     std::cout << node->m_NodeType << " ";
-        // }
-        // std::cout << std::endl;
-
         bool keepReducing = true;
         while(keepReducing) {
             keepReducing = reduceIfCan();
         }
     }
 
-
-    std::cout << "------Parsing finished-------" << std::endl;
-
-    std::cout << "----------- Tree ------------" << std::endl;
-    std::cout << *m_Nodes[0] << std::endl;
+    // std::cout << ":> Parsed tree:" << std::endl;
+    // std::cout << *m_Nodes[0] << std::endl;
 
     if (m_Nodes.size() > 1) {
         // There is an error for sure, let's try to deduce where it is
@@ -364,14 +322,14 @@ bool SyntaxAnalyzer::parse() {
             }
         }
 
-
-
-        std::cout << "[Parse error]: Unexpected input end." << std::endl;
+        std::cout << ":> [Parse Error]: Unexpected input end." << std::endl;
         return false;
     }
 
-    if (m_Nodes[0]->m_NodeType != NodeType_DeclarationList) {
-        std::cout << "[Parse error]: Unexpected top-level entry." << std::endl;
+    const auto topLevelNodeType = m_Nodes[0]->m_NodeType;
+    if (!(topLevelNodeType == NodeType_DeclarationList ||
+            topLevelNodeType == NodeType_Declaration)) {
+        std::cout << ":> [Parse Error]: Unexpected top-level entry." << std::endl;
         return false;
     }
 
@@ -394,7 +352,7 @@ bool SyntaxAnalyzer::isAllowed(
             }
         }
 
-        std::cout << "[Parse Error]: After " << nodeType1 << " expected one of the following:[";
+        std::cout << ":> [Parse Error]: After " << nodeType1 << " expected one of the following:[";
         for (NodeType nodeType : allowedSequences) {
             std::cout << "'" << nodeType << "' ";
         }

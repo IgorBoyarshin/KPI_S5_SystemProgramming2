@@ -1,10 +1,6 @@
 #include "TokenType.h"
 
 
-// TokenType getTokenTypeFromString(const std::string& str) {
-// }
-
-
 std::string toString(TokenType tokenType) {
     switch(tokenType) {
         case TokenType_Identifier:
@@ -60,8 +56,6 @@ std::ostream& operator<<(std::ostream& os, const TokenType& tokenType) {
 
 
 TokenType getIfKeyword(const std::string& potentialKeyword) {
-    // static const std::string KEYWORDS[] = {"if", "else", "void", "bool", "int", "float"};
-
     if (potentialKeyword.compare("if") == 0) {
         return TokenType_Keyword_If;
     } else if (potentialKeyword.compare("else") == 0) {

@@ -117,7 +117,7 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
                         accumulatingNumber = false;
                     } else if (accumulatingNumber) {
                         // something like "35var" => invalid
-                        std::cout << ":> Bad format(at char " << currentIndex
+                        std::cout << ":> [Lexical Analyzer Error]: Bad format(at char " << currentIndex
                                   << "): " << accumulator << std::endl;
                         return m_TokensTable;
                     }
@@ -130,7 +130,7 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
 
                     accumulator += c;
                 } else {
-                    std::cout << ":> Bad format: Unknown char at "
+                    std::cout << ":> [Lexical Analyzer Error]: Bad format: Unknown char at "
                               << currentIndex << ": " << c << std::endl;
                     return m_TokensTable;
                 }
@@ -184,7 +184,7 @@ std::vector<Token> LexicalAnalyzer::analyze(const std::string& input) {
 }
 
 std::ostream& operator<<(std::ostream& os, const LexicalAnalyzer& lexicalAnalyzer) {
-    os << "Tokens table:" << std::endl;
+    os << ":> Tokens table:" << std::endl;
 
     for (const Token& token : lexicalAnalyzer.m_TokensTable) {
         os << token << std::endl;

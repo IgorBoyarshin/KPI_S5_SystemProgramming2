@@ -3,7 +3,10 @@
 
 #include <vector>
 #include <string>
+#include <ostream>
+#include <iostream>
 #include "NodeType.h"
+
 
 class Node {
     public:
@@ -27,17 +30,6 @@ class Node {
         std::vector<const Node*> m_Children;
 
         friend std::ostream& operator<<(std::ostream& os, const Node& node);
-
-
-    public:
-        // NodeType getNodeType() {
-        //     return m_NodeType;
-        // }
-        //
-        // std::string getNodeValue() {
-        //     return m_NodeValue;
-        // }
-
 };
 
 std::ostream& operator<<(std::ostream& os, const Node& node);

@@ -1,13 +1,14 @@
 #ifndef CODEGENERATOR_H
 #define CODEGENERATOR_H
 
-#include "NodeType.h"
-#include "Node.h"
 #include <string>
 #include <vector>
 #include <map>
 #include <iostream>
 #include <sstream>
+#include "NodeType.h"
+#include "Node.h"
+
 
 class CodeGenerator {
     public:

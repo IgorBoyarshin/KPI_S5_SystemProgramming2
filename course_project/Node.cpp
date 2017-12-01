@@ -1,6 +1,4 @@
 #include "Node.h"
-#include <ostream>
-#include <iostream>
 
 /*
  * switch(NodeType):

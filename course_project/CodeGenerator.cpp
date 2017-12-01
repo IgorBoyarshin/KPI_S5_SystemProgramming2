@@ -125,7 +125,6 @@ void CodeGenerator::generateStatementListCode(
 }
 
 
-// TODO: if
 void CodeGenerator::generateStatementCode(
     std::stringstream& code,
     const Node* statementNode) const {
@@ -150,8 +149,6 @@ void CodeGenerator::generateStatementCode(
 
             // The previous function will have stored the result of the
             // expression in the EAX register
-            // code << shift() << "lea edi, " << children[0]->m_NodeValue << std::endl
-            //      << shift() << "mov dword ptr[edi], eax" << std::endl
             code << shift() << "mov " << children[0]->m_NodeValue << ", eax" << std::endl
                  << std::endl;
             break;
@@ -203,11 +200,8 @@ void CodeGenerator::generateExpressionEvaluation(
                 case NodeType_IdBool:
                 case NodeType_IdFloat:
                 case NodeType_IdInt: {
-                    // code << shift() << "lea esi, "
-                    //                 << firstNode->m_NodeValue << "" << std::endl
                     code << shift() << "mov eax, " << firstNode->m_NodeValue
                                     << "" << std::endl;
-                    // code << std::endl;
                     break;
                 }
                 case NodeType_LiteralBool:
@@ -222,7 +216,6 @@ void CodeGenerator::generateExpressionEvaluation(
                 case NodeType_LiteralFloat:
                 case NodeType_LiteralInt: {
                     code << shift() << "mov eax, " << firstNode->m_NodeValue << std::endl;
-                    // code << std::endl;
                     break;
                 }
                 case NodeType_FunctionCallBool:
@@ -242,12 +235,13 @@ void CodeGenerator::generateExpressionEvaluation(
 
                     generateExpressionEvaluation(code, operand2);
                     code << shift() << "mov ebx, eax" << std::endl;
-                         // << std::endl;
                     generateExpressionEvaluation(code, operand1);
 
                     // The arguments are now in EAX and EBX
 
-                    std::string addedF(operand1->m_NodeType == NodeType_ExpressionFloat ? "f" : "");
+                    std::string addedF{
+                        operand1->m_NodeType == NodeType_ExpressionFloat ? "f" : ""
+                    };
                     switch (operation) {
                         case NodeType_OperatorPlus:
                             code << shift() << addedF << "add eax, ebx" << std::endl;
@@ -339,7 +333,6 @@ void CodeGenerator::generateExpressionEvaluation(
                         default:
                             break;
                     }
-                    // code << std::endl;
 
                     break;
                 }
@@ -363,7 +356,6 @@ void CodeGenerator::generateFunctionCallCode(
     const std::vector<const Node*> children = functionNode->m_Children;
     const NodeType functionType = functionNode->m_NodeType;
     const std::string functionName = children[0]->m_NodeValue;
-    // const NodeType functionReturnType = children[0]->m_NodeType;
     switch (functionType) {
         case NodeType_FunctionCallInt:
         case NodeType_FunctionCallFloat:
@@ -375,15 +367,15 @@ void CodeGenerator::generateFunctionCallCode(
                 const auto types = generateExpressionListPush(code, children[2]);
                 if (functionExpectedTypes.size() - 1 != types.size()) {
                     m_ErrorFound = true;
-                    std::cout << "[Parse Error]: specified function arguments do not match with those specified at function declaration(for function " << functionName << ")." << std::endl;
+                    std::cout << ":> [Parse Error]: specified function arguments do not match with those specified at function declaration(for function " << functionName << ")." << std::endl;
                     return;
                 }
 
                 for (unsigned int i = 0; i < types.size(); i++) {
                     if (functionExpectedTypes[i+1].second != types[i]) {
                         m_ErrorFound = true;
-                        std::cout << "[Parse Error]: Specified function arguments do not match with those specified at function declaration(for function " << functionName << ")." << std::endl;
-                        std::cout << "[Parse Error]: Expected:Found: " << functionExpectedTypes[i+1].second << ":" << types[i] << std::endl;
+                        std::cout << ":> [Parse Error]: Specified function arguments do not match with those specified at function declaration(for function " << functionName << ")." << std::endl;
+                        std::cout << ":> [Parse Error]: Expected:Found: " << functionExpectedTypes[i+1].second << ":" << types[i] << std::endl;
                         return;
                     }
                 }
@@ -466,12 +458,11 @@ void CodeGenerator::generateFunctionDeclarationCode(
         functionDeclarationNode->m_Children[0]->m_Children[1]->m_NodeValue;
     const std::vector< std::pair<std::string, NodeType> > functionArguments =
         m_Functions.at(functionName);
-    // const NodeType functionReturnType = functionArguments[0];
 
     // Function title
     code << functionName << " proc" << std::endl;
-    // code << shift() << "push ebp" << std::endl
-    //      << shift() << "mov ebp, esp" << std::endl;
+    code << shift() << "push ebp" << std::endl
+         << shift() << "mov ebp, esp" << std::endl;
     code << std::endl;
 
     // Retrieve arguments from the srack
@@ -479,8 +470,6 @@ void CodeGenerator::generateFunctionDeclarationCode(
     const unsigned int firstArgShift = (amountOfArguments + 1) * 4;
     for (unsigned int i = 1; i < functionArguments.size(); i++) {
         code << shift() << "mov eax, dword ptr[ebp + " << (firstArgShift - (i - 1) * 4) << "]" << std::endl;
-        // code << shift() << "lea edi, " << functionArguments[i].first << std::endl;
-        // code << shift() << "mov dword ptr[edi], eax" << std::endl;
         code << shift() << "mov " << functionArguments[i].first << ", eax" << std::endl;
         code << std::endl;
     }
@@ -490,9 +479,9 @@ void CodeGenerator::generateFunctionDeclarationCode(
 
 
     // Generate function end
-    // code << shift() << "mov esp, ebp" << std::endl
-    //      << shift() << "pop ebp" << std::endl
-    //      << shift() << "ret " << (amountOfArguments * 4) << std::endl;
+    code << shift() << "mov esp, ebp" << std::endl
+         << shift() << "pop ebp" << std::endl
+         << shift() << "ret " << (amountOfArguments * 4) << std::endl;
     code << functionName << " endp" << std::endl;
     code << std::endl;
 }
@@ -523,8 +512,6 @@ std::vector< std::pair<std::string, NodeType> >
         } else if (child->m_NodeType == NodeType_TypedId) {
             const bool functionId = (index + 1) < children.size() &&
                 children[index + 1]->m_NodeType == NodeType_ParenthesesOpen;
-            // std::cout << "Found: " << typedIdChildren[0]->m_NodeType << " "
-                // << typedIdChildren[1]->m_NodeValue << ", func: " << functionId << std::endl;
             if (!functionId) {
                 const std::vector<const Node*> typedIdChildren = child->m_Children;
                 const NodeType type = typedIdChildren[0]->m_NodeType;
@@ -564,7 +551,6 @@ std::map< std::string, std::vector< std::pair<std::string, NodeType> > >
                 const std::vector<const Node*> typedIdChildren = child->m_Children;
                 const NodeType functionType = typedIdChildren[0]->m_NodeType;
                 const std::string functionName = typedIdChildren[1]->m_NodeValue;
-                // declarations.push_back(std::pair<std::string, NodeType>(name, type));
                 const std::vector<std::pair<std::string, NodeType>> variableDeclarations =
                     getAllVariableDeclarations(parentNode);
                 std::vector< std::pair<std::string, NodeType> > arguments;

@@ -6,10 +6,10 @@
 #include <sstream>
 #include <iterator>
 #include <string>
-#include "Token.h"
-#include "Node.h"
 #include <tuple>
 #include <map>
+#include "Token.h"
+#include "Node.h"
 
 
 typedef std::tuple<std::vector<NodeType>, NodeType> ReductionPattern;
