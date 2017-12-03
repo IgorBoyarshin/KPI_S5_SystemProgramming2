@@ -10,13 +10,13 @@ void ->
     ID
 
 bool ->
-    ID
+    ID *
 
 int ->
-    ID
+    ID *
 
 float ->
-    ID
+    ID *
 
 ID_VOID ->
     (
@@ -29,6 +29,15 @@ ID_INT ->
 
 ID_FLOAT ->
     = (
+
+ID_POINTER_BOOL ->
+    = ( [
+
+ID_POINTER_INT ->
+    = ( [
+
+ID_POINTER_FLOAT ->
+    = ( [
 
 DECLARATION_LIST ->
     DECLARATION
@@ -46,13 +55,13 @@ EXPRESSION_LIST ->
     , )
 
 EXPRESSION_BOOL ->
-    ; ) , == !=
+    ; ) , == != ]
 
 EXPRESSION_INT ->
-    ; ) , == != < <= > >= * / + -
+    ; ) , == != < <= > >= * / + - ]
 
 EXPRESSION_FLOAT ->
-    ; ) , == != < <= > >= * / + -
+    ; ) , == != < <= > >= * / + - ]
 
 FUNCTION_CALL_VOID ->
     ;
@@ -65,6 +74,9 @@ FUNCTION_CALL_VOID ->
 
 ) ->
     BLOCK STATEMENT
+
+[ ->
+    EXPRESSION_INT
 
 = ->
     EXPRESSION_BOOL EXPRESSION_INT EXPRESSION_FLOAT

@@ -14,6 +14,12 @@ NodeType getNodeTypeFromString(const std::string& str) {
         return NodeType_IdInt;
     } else if (str.compare("ID_FLOAT") == 0) {
         return NodeType_IdFloat;
+    } else if (str.compare("ID_POINTER_BOOL") == 0) {
+        return NodeType_IdPointerBool;
+    } else if (str.compare("ID_POINTER_INT") == 0) {
+        return NodeType_IdPointerInt;
+    } else if (str.compare("ID_POINTER_FLOAT") == 0) {
+        return NodeType_IdPointerFloat;
     } else if (str.compare("LITERAL_BOOL") == 0) {
         return NodeType_LiteralBool;
     } else if (str.compare("LITERAL_INT") == 0) {
@@ -92,6 +98,12 @@ NodeType getNodeTypeFromString(const std::string& str) {
         return NodeType_ExpressionInt;
     } else if (str.compare("EXPRESSION_FLOAT") == 0) {
         return NodeType_ExpressionFloat;
+    } else if (str.compare("EXPRESSION_POINTER_BOOL") == 0) {
+        return NodeType_ExpressionPointerBool;
+    } else if (str.compare("EXPRESSION_POINTER_INT") == 0) {
+        return NodeType_ExpressionPointerInt;
+    } else if (str.compare("EXPRESSION_POINTER_FLOAT") == 0) {
+        return NodeType_ExpressionPointerFloat;
     } else if (str.compare("FUNCTION_CALL_VOID") == 0) {
         return NodeType_FunctionCallVoid;
     } else if (str.compare("FUNCTION_CALL_BOOL") == 0) {
@@ -100,6 +112,12 @@ NodeType getNodeTypeFromString(const std::string& str) {
         return NodeType_FunctionCallInt;
     } else if (str.compare("FUNCTION_CALL_FLOAT") == 0) {
         return NodeType_FunctionCallFloat;
+    } else if (str.compare("FUNCTION_CALL_POINTER_BOOL") == 0) {
+        return NodeType_FunctionCallPointerBool;
+    } else if (str.compare("FUNCTION_CALL_POINTER_INT") == 0) {
+        return NodeType_FunctionCallPointerInt;
+    } else if (str.compare("FUNCTION_CALL_POINTER_FLOAT") == 0) {
+        return NodeType_FunctionCallPointerFloat;
     }
 
     std::cout << "[Parse Error]: In getNodeTypeFromString: unknown NodeType: "
@@ -122,6 +140,12 @@ std::string toString(NodeType nodeType) {
             return "ID_INT";
         case NodeType_IdFloat:
             return "ID_FLOAT";
+        case NodeType_IdPointerBool:
+            return "ID_POINTER_BOOL";
+        case NodeType_IdPointerInt:
+            return "ID_POINTER_INT";
+        case NodeType_IdPointerFloat:
+            return "ID_POINTER_FLOAT";
         case NodeType_LiteralBool:
             return "LITERAL_BOOL";
         case NodeType_LiteralInt:
@@ -140,6 +164,12 @@ std::string toString(NodeType nodeType) {
             return "INT";
         case NodeType_KeywordFloat:
             return "FLOAT";
+        case NodeType_KeywordPointerBool:
+            return "BOOL*";
+        case NodeType_KeywordPointerInt:
+            return "INT*";
+        case NodeType_KeywordPointerFloat:
+            return "FLOAT*";
         case NodeType_BracketsOpen:
             return "[";
         case NodeType_BracketsClose:
@@ -201,6 +231,12 @@ std::string toString(NodeType nodeType) {
             return "EXPRESSION_INT";
         case NodeType_ExpressionFloat:
             return "EXPRESSION_FLOAT";
+        case NodeType_ExpressionPointerBool:
+            return "EXPRESSION_POINTER_BOOL";
+        case NodeType_ExpressionPointerInt:
+            return "EXPRESSION_POINTER_INT";
+        case NodeType_ExpressionPointerFloat:
+            return "EXPRESSION_POINTER_FLOAT";
         case NodeType_FunctionCallVoid:
             return "FUNCTION_CALL_VOID";
         case NodeType_FunctionCallBool:
@@ -209,6 +245,12 @@ std::string toString(NodeType nodeType) {
             return "FUNCTION_CALL_INT";
         case NodeType_FunctionCallFloat:
             return "FUNCTION_CALL_FLOAT";
+        case NodeType_FunctionCallPointerBool:
+            return "FUNCTION_CALL_POINTER_BOOL";
+        case NodeType_FunctionCallPointerInt:
+            return "FUNCTION_CALL_POINTER_INT";
+        case NodeType_FunctionCallPointerFloat:
+            return "FUNCTION_CALL_POINTER_FLOAT";
 
     std::cout << "[Parse Error]: In toString: unknown NodeType." << std::endl;
     return "~UNKNOWN~";

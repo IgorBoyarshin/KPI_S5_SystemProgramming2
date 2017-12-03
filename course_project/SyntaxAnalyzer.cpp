@@ -108,7 +108,6 @@ bool SyntaxAnalyzer::reduceIfCan() {
     // otherwise convert into the appropriate type using the IDs table. If there
     // is no entry for this ID in the table => Error.
     if (currentNodeType == NodeType_Id) {
-        // std::cout << "000000:" << currentNode->m_NodeValue << std::endl;
         const std::string& idValue = currentNode->m_NodeValue;
         const bool knownId =
             m_IdsTable.find(idValue) != m_IdsTable.end();
@@ -129,15 +128,81 @@ bool SyntaxAnalyzer::reduceIfCan() {
             return false;
         }
 
+        // Based on length determine the type of reduction:
+        // - 1 => ID usage
+        // - 2 => variable definition
+        // - 3 => pointer definition
+        const unsigned int reductionLength = std::get<0>(firstReductionPattern).size();
+
         // The index is valid, becase otherwise we'd have (!knownId && !idDeclaration)
-        const NodeType previousNodeType = m_Nodes.at(currentNodeIndex - 1)->m_NodeType;
+        const NodeType previousNodeType = m_Nodes.at(
+                (reductionLength == 3) ?
+                (currentNodeIndex - 2) :
+                (reductionLength == 5 ?
+                  (currentNodeIndex - 4) :
+                  (currentNodeIndex - 1))
+            )->m_NodeType;
+            //     || reductionLength == 5 ? // pointer declaration
+            //         (currentNodeIndex - 2) :
+            //         (currentNodeIndex - 1)
+            // )->m_NodeType;
+
+        std::cout << "type: " << previousNodeType << std::endl;
         if (idDeclaration) {
-            m_IdsTable.insert(
-                std::pair<std::string, std::vector<NodeType>>(
-                    idValue,
-                    {previousNodeType}
-                )
-            );
+            if (reductionLength == 3 || reductionLength == 5) {
+                switch (previousNodeType) {
+                    case NodeType_KeywordBool:
+                        m_IdsTable.insert(
+                            std::pair<std::string, std::vector<NodeType>>(
+                                idValue,
+                                {NodeType_KeywordPointerBool}
+                            )
+                        );
+                        break;
+                    case NodeType_KeywordInt:
+                        std::cout << "------- inserting int*" << std::endl;
+                        m_IdsTable.insert(
+                            std::pair<std::string, std::vector<NodeType>>(
+                                idValue,
+                                {NodeType_KeywordPointerInt}
+                            )
+                        );
+                        break;
+                    case NodeType_KeywordFloat:
+                        m_IdsTable.insert(
+                            std::pair<std::string, std::vector<NodeType>>(
+                                idValue,
+                                {NodeType_KeywordPointerFloat}
+                            )
+                        );
+                        break;
+                    default:
+                        std::cerr << "Something went wrong..." << std::endl;
+                        break;
+                }
+            } else {
+                if (peekNext()->m_NodeType == NodeType_BracketsOpen) {
+                    std::cout << "oooooooooooo" << std::endl;
+                    const NodeType nt =
+                        (previousNodeType == NodeType_KeywordInt) ? NodeType_KeywordPointerInt :
+                        (previousNodeType == NodeType_KeywordFloat) ? NodeType_KeywordPointerFloat : NodeType_KeywordPointerBool;
+                    m_IdsTable.insert(
+                        std::pair<std::string, std::vector<NodeType>>(
+                            idValue,
+                            {nt}
+                        )
+                    );
+                    std::cout << "++++++ inserting " << nt << std::endl;
+                    // return false; // array declaraton => don't reduce for now
+                } else {
+                    m_IdsTable.insert(
+                        std::pair<std::string, std::vector<NodeType>>(
+                            idValue,
+                            {previousNodeType}
+                        )
+                    );
+                }
+            }
 
             // Now continue(will be reduced)
         } else { // knownId
@@ -171,6 +236,24 @@ bool SyntaxAnalyzer::reduceIfCan() {
                         idValue
                     );
                     break;
+                case NodeType_KeywordPointerBool:
+                    m_Nodes[currentNodeIndex] = new Node(
+                        NodeType_IdPointerBool,
+                        idValue
+                    );
+                    break;
+                case NodeType_KeywordPointerInt:
+                    m_Nodes[currentNodeIndex] = new Node(
+                        NodeType_IdPointerInt,
+                        idValue
+                    );
+                    break;
+                case NodeType_KeywordPointerFloat:
+                    m_Nodes[currentNodeIndex] = new Node(
+                        NodeType_IdPointerFloat,
+                        idValue
+                    );
+                    break;
                 default:
                     std::cerr << ":> [Parse Error]: reduceIfCan(): Invalid Type for ID: "
                               << idType
@@ -184,13 +267,17 @@ bool SyntaxAnalyzer::reduceIfCan() {
     }
 
 
-    // Don't allow an Id to become an expression if it is an assignment or a function
+    // Don't allow an Id to become an expression if it is an assignment or a function or an array access
     if ((currentNodeType == NodeType_IdBool ||
             currentNodeType == NodeType_IdInt ||
-            currentNodeType == NodeType_IdFloat)
+            currentNodeType == NodeType_IdFloat ||
+            currentNodeType == NodeType_IdPointerBool ||
+            currentNodeType == NodeType_IdPointerInt ||
+            currentNodeType == NodeType_IdPointerFloat)
             && nextNode) {
         const NodeType nextNodeType = nextNode->m_NodeType;
         if (nextNodeType == NodeType_ParenthesesOpen
+                || nextNodeType == NodeType_BracketsOpen
                 || nextNodeType == NodeType_OperatorAssign) {
             return false;
         }
@@ -265,12 +352,12 @@ bool SyntaxAnalyzer::reduceIfCan() {
 
     // Alles gut => pick the best(first is best) pattern
 
-    // std::cout << ":> Before reduction: ";
-    // for (const Node* node : m_Nodes) {
-    //     std::cout << node->m_NodeType << " ";
-    // }
-    // std::cout << std::endl;
-    //
+    std::cout << ":> Before reduction: ";
+    for (const Node* node : m_Nodes) {
+        std::cout << node->m_NodeType << " ";
+    }
+    std::cout << std::endl;
+
 
     const unsigned int patternSize = std::get<0>(firstReductionPattern).size();
     const unsigned int startIndex = m_Nodes.size() - patternSize;
@@ -288,12 +375,12 @@ bool SyntaxAnalyzer::reduceIfCan() {
         children
     ));
 
-    // std::cout << ":> After reduction: ";
-    // for (const Node* node : m_Nodes) {
-    //     std::cout << node->m_NodeType << " ";
-    // }
-    // std::cout << std::endl;
-    //
+    std::cout << ":> After reduction: ";
+    for (const Node* node : m_Nodes) {
+        std::cout << node->m_NodeType << " ";
+    }
+    std::cout << std::endl;
+
 
     return true;
 }
@@ -333,6 +420,10 @@ bool SyntaxAnalyzer::parse() {
         return false;
     }
 
+    std::cout << "Table:" << std::endl;
+    for (const auto& m : m_IdsTable) {
+        std::cout << m.first << " " << m.second[0] << std::endl;
+    }
 
 
     return true;

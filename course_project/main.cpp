@@ -64,8 +64,13 @@ int main() {
     // const std::string input =
     //     "int a; int main(){ if(4 < 5 - 3) {a = 5; a = a * 8;} else a = 6;}";
     // Wrong
+    // const std::string input =
+    //     "int a; int main(){ if(true) else a = 6;}";
+
     const std::string input =
-        "int a; int main(){ if(true) else a = 6;}";
+        "int* toPInt(int i){} int* a; int b[5+2]; int c; int main(){ c = b[2-b[2]]; }";
+    // const std::string input =
+    //     "float sin(float f){} int toInt(float* i){} float *a; int b; int main(){b=toInt(2+a);}";
 
     std::cout << ":> Input: " << std::endl << input << std::endl;
 
@@ -98,9 +103,9 @@ int main() {
         std::cout << ":> [Code Generator Error]: Invalid input. Terminating." << std::endl;
         return -1;
     }
-    std::cout << ":> Output code: " << std::endl
-              << code
-              << std::endl;
+    // std::cout << ":> Output code: " << std::endl
+    //           << code
+    //           << std::endl;
 
 
     return 0;

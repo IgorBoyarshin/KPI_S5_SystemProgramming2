@@ -12,6 +12,9 @@ enum NodeType {
     NodeType_IdBool,
     NodeType_IdInt,
     NodeType_IdFloat,
+    NodeType_IdPointerBool,
+    NodeType_IdPointerInt,
+    NodeType_IdPointerFloat,
     NodeType_LiteralBool,
     NodeType_LiteralInt,
     NodeType_LiteralFloat,
@@ -24,6 +27,9 @@ enum NodeType {
     NodeType_KeywordBool,
     NodeType_KeywordInt,
     NodeType_KeywordFloat,
+    NodeType_KeywordPointerBool,
+    NodeType_KeywordPointerInt,
+    NodeType_KeywordPointerFloat,
     NodeType_BracketsOpen, // [
     NodeType_BracketsClose, // ]
     NodeType_ParenthesesOpen, // (
@@ -57,10 +63,16 @@ enum NodeType {
     NodeType_ExpressionBool,
     NodeType_ExpressionInt,
     NodeType_ExpressionFloat,
+    NodeType_ExpressionPointerBool,
+    NodeType_ExpressionPointerInt,
+    NodeType_ExpressionPointerFloat,
     NodeType_FunctionCallVoid,
     NodeType_FunctionCallBool,
     NodeType_FunctionCallInt,
     NodeType_FunctionCallFloat,
+    NodeType_FunctionCallPointerBool,
+    NodeType_FunctionCallPointerInt,
+    NodeType_FunctionCallPointerFloat,
 };
 
 
