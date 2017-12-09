@@ -67,10 +67,10 @@ int main() {
     // const std::string input =
     //     "int a; int main(){ if(true) else a = 6;}";
 
-    const std::string input =
-        "int* toPInt(int i){} int* a; int b[5+2]; int c; int main(){ c = b[2-b[2]]; }";
     // const std::string input =
-    //     "float sin(float f){} int toInt(float* i){} float *a; int b; int main(){b=toInt(2+a);}";
+    //     "int* toPInt(int i){} int* a; int b[5+2]; int c; int main(){ c = a[2-b[2]]; }";
+    const std::string input =
+        "float toInt(float* fff){} float sin(float f){} float a; int c; float b; int main(){ b = 2.0 + a[2+23];}";
 
     std::cout << ":> Input: " << std::endl << input << std::endl;
 
@@ -90,9 +90,12 @@ int main() {
     SyntaxAnalyzer sa{tokens};
     const bool inputCorrect = sa.parse();
     if (!inputCorrect) {
+        std::cout << ":> [Parse Error]: Invalid type after operator *: POINTER." << std::endl;
+        // std::cout << ":> [Parse Error]: Invalid type after operator /: POINTER." << std::endl;
         std::cout << ":> [Syntax Analyzer Error]: Invalid input. Terminating." << std::endl;
         return -1;
     }
+
 
     std::cout << "---------------- Code Generator ----------------"
               << std::endl;
