@@ -1,0 +1,5 @@
+Input: int b; bool c; c = 1 + (2 >= (2 / 4 * 2.0));
+*** Syntax Analyzer Error ***: Incompatible types with operator: int OperatorPlus bool.
+*** Syntax Analyzer Error ***: Invalid expression at index 8.
+*** Syntax Analyzer Error ***: Invalid assignment at index 6.
+*** Syntax Analyzer Error ***: Syntax analysis failed.
