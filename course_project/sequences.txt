@@ -1,0 +1,104 @@
+% Allowed sequences
+
+TYPED_ID_LIST ->
+    , )
+
+TYPED_ID ->
+    , ; ( )
+
+void ->
+    ID
+
+bool ->
+    ID
+
+int ->
+    ID
+
+float ->
+    ID
+
+ID_VOID ->
+    (
+
+ID_BOOL ->
+    = (
+
+ID_INT ->
+    = (
+
+ID_FLOAT ->
+    = (
+
+DECLARATION_LIST ->
+    DECLARATION
+
+DECLARATION ->
+    DECLARATION
+
+STATEMENT_LIST ->
+    STATEMENT }
+
+STATEMENT ->
+    STATEMENT else }
+
+EXPRESSION_LIST ->
+    , )
+
+EXPRESSION_BOOL ->
+    ; ) , == !=
+
+EXPRESSION_INT ->
+    ; ) , == != < <= > >= * / + -
+
+EXPRESSION_FLOAT ->
+    ; ) , == != < <= > >= * / + -
+
+FUNCTION_CALL_VOID ->
+    ;
+
+{ ->
+    } STATEMENT STATEMENT_LIST
+
+( ->
+    ) TYPED_ID TYPED_ID_LIST EXPRESSION_BOOL EXPRESSION_INT EXPRESSION_FLOAT EXPRESSION_LIST
+
+) ->
+    BLOCK STATEMENT
+
+= ->
+    EXPRESSION_BOOL EXPRESSION_INT EXPRESSION_FLOAT
+
+== ->
+    EXPRESSION_BOOL EXPRESSION_INT EXPRESSION_FLOAT
+
+!= ->
+    EXPRESSION_BOOL EXPRESSION_INT EXPRESSION_FLOAT
+
+< ->
+    EXPRESSION_INT EXPRESSION_FLOAT
+
+<= ->
+    EXPRESSION_INT EXPRESSION_FLOAT
+
+> ->
+    EXPRESSION_INT EXPRESSION_FLOAT
+
+>= ->
+    EXPRESSION_INT EXPRESSION_FLOAT
+
++ ->
+    EXPRESSION_INT EXPRESSION_FLOAT
+
+- ->
+    EXPRESSION_INT EXPRESSION_FLOAT
+
+* ->
+    EXPRESSION_INT EXPRESSION_FLOAT
+
+/ ->
+    EXPRESSION_INT EXPRESSION_FLOAT
+
+
+
+
