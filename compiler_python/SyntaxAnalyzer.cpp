@@ -17,6 +17,8 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
 
     unsigned int lineIndex = 0;
     for (const std::vector<Token>& currentLine : lines) {
+        lineIndex++;
+
         const unsigned int shiftLevel = getShiftLevel(currentLine);
         const std::vector<Token> line = stripFromTabs(currentLine);
 
@@ -53,9 +55,9 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                 }
                 insideFd = true;
 
-                const Token& tokenId = line.at(1);
+                const Token tokenId = line.at(1);
                 const TokenType tokenIdType = tokenId.type;
-                const std::string& tokenIdValue = tokenId.value;
+                const std::string tokenIdValue = tokenId.value;
                 if (tokenIdType != TokenType_Identifier) {
                     std::cout << "Syntax Error:"
                               << " Invalid function definition."
@@ -212,7 +214,7 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                         reducedExpression.type;
                     if (expressionType == PieceType_Undefined) {
                         std::cout << "Syntax Error:"
-                                  << " Invalid return expression."
+                                  << " Invalid expression."
                                   << " In line " << lineIndex << "."
                                   << std::endl;
                         return false;
@@ -242,7 +244,33 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                         NodeStatement(ss.str())
                     );
                 } else if (secondTokenType == TokenType_LeftParenthesis) {
-                    // TODO
+                    // void function call
+
+                    if (m_VariablesTable.find(idValue) == m_VariablesTable.end()) {
+                        std::cout << "Syntax Error:"
+                                  << " Call of undeclared function."
+                                  << " In line " << lineIndex << "."
+                                  << std::endl;
+                        return false;
+                    }
+
+                    const Piece reducedFunctionCall =
+                        reduceExpression(line, 0, lineIndex);
+                    const PieceType functionType =
+                        reducedFunctionCall.type;
+                    if (functionType == PieceType_Undefined) {
+                        std::cout << "Syntax Error:"
+                                  << " Invalid function call."
+                                  << " In line " << lineIndex << "."
+                                  << std::endl;
+                        return false;
+                    }
+
+                    m_Nodes.push_back(
+                        NodeStatement(
+                            reducedFunctionCall.content
+                        )
+                    );
                 } else {
                     std::cout << "Syntax Error:"
                               << " Invalid Token after ID."
@@ -261,10 +289,6 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                           << std::endl;
                 return false;
         }
-
-
-
-        lineIndex++;
     }
 }
 
@@ -499,7 +523,7 @@ int SyntaxAnalyzer::findFuncBeginFuncEnd(const std::vector<Piece>& line) const {
 int SyntaxAnalyzer::findOperator(
         const std::vector<Piece>& line,
         unsigned int lineIndex) const {
-    for (unsigned int i = 1; i < line.size(); i++) {
+    for (int i = 1; i < static_cast<int>(line.size()) - 1; i++) {
         const Piece piece = line.at(i);
         const PieceType leftType = line.at(i - 1).type;
         const PieceType rightType = line.at(i + 1).type;
@@ -526,16 +550,16 @@ int SyntaxAnalyzer::findOperator(
                             break;
                         case PieceType_Bool:
                             std::cout << "Semantic Error: "
-                                      << "Invalid left-hand side type for operator"
+                                      << "Invalid left-hand side type for operator "
                                       << piece.type << ": Bool. Expected Number. "
-                                      << "In line " << lineIndex + "."
+                                      << "In line " << lineIndex << "."
                                       << std::endl;
                             return -2;
                         default:
                             std::cout << "Semantic Error: "
-                                      << "Invalid left-hand side token for operator"
+                                      << "Invalid left-hand side token for operator "
                                       << piece.type << ": " << leftType << ". "
-                                      << "In line " << lineIndex + "."
+                                      << "In line " << lineIndex << "."
                                       << std::endl;
                             return -2;
                     }
@@ -553,14 +577,14 @@ int SyntaxAnalyzer::findOperator(
                             std::cout << "Semantic Error: "
                                       << "Invalid right-hand side type for operator"
                                       << piece.type << ": Bool. Expected Number. "
-                                      << "In line " << lineIndex + "."
+                                      << "In line " << lineIndex << "."
                                       << std::endl;
                             return -2;
                         default:
                             std::cout << "Semantic Error: "
                                       << "Invalid right-hand side token for operator"
                                       << piece.type << ": " << rightType << ". "
-                                      << "In line " << lineIndex + "."
+                                      << "In line " << lineIndex << "."
                                       << std::endl;
                             return -2;
                     }
@@ -583,16 +607,17 @@ int SyntaxAnalyzer::findOperator(
                             break;
                         case PieceType_Number:
                             std::cout << "Semantic Error: "
-                                      << "Invalid left-hand side type for operator"
+                                      << "Invalid left-hand side type for operator "
                                       << piece.type << ": Number. Expected Bool. "
-                                      << "In line " << lineIndex + "."
+                                      << "In line "
+                                      << lineIndex << "."
                                       << std::endl;
                             return -2;
                         default:
                             std::cout << "Semantic Error: "
-                                      << "Invalid left-hand side token for operator"
+                                      << "Invalid left-hand side token for operator "
                                       << piece.type << ": " << leftType << ". "
-                                      << "In line " << lineIndex + "."
+                                      << "In line " << lineIndex << "."
                                       << std::endl;
                             return -2;
                     }
@@ -610,14 +635,14 @@ int SyntaxAnalyzer::findOperator(
                             std::cout << "Semantic Error: "
                                       << "Invalid right-hand side type for operator"
                                       << piece.type << ": Number. Expected Bool. "
-                                      << "In line " << lineIndex + "."
+                                      << "In line " << lineIndex << "."
                                       << std::endl;
                             return -2;
                         default:
                             std::cout << "Semantic Error: "
                                       << "Invalid right-hand side token for operator"
                                       << piece.type << ": " << rightType << ". "
-                                      << "In line " << lineIndex + "."
+                                      << "In line " << lineIndex << "."
                                       << std::endl;
                             return -2;
                     }
@@ -703,7 +728,7 @@ std::vector<Piece> SyntaxAnalyzer::convertTokensIntoPieces(
                         if (index + 1 < tokens.size() &&
                             tokens.at(index + 1).type == TokenType_LeftParenthesis) {
                             std::cout << "Syntax Error: Invalid function call: '"
-                                      << tokenValue + "' is not a function."
+                                      << tokenValue << "' is not a function."
                                       << " In line " << lineIndex << "."
                                       << std::endl;
                             return std::vector<Piece>(); // empty
@@ -857,7 +882,7 @@ std::vector<Piece> SyntaxAnalyzer::convertTokensIntoPieces(
 
             default:
                 std::cout << "Syntax Error: Invalid token in expression: "
-                          << tokenType << ". In line " << lineIndex + "."
+                          << tokenType << ". In line " << lineIndex << "."
                           << std::endl;
                 return std::vector<Piece>(); // empty
         }

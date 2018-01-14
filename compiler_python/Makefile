@@ -3,9 +3,6 @@ classFiles = Argument LexicalAnalyzer Node NodeFunctionNew NodeFunctionEnd NodeS
 justHeaderFiles = NodeType
 
 
-# translationUnitFiles = $(mainFileName) $(classFiles)
-# filesObj = $(addsuffix .o, $(translationUnitFiles))
-
 filesObj = $(addsuffix .o, $(mainFileName) $(classFiles))
 filesH = $(addsuffix .h, $(classFiles) $(justHeaderFiles))
 
@@ -14,11 +11,11 @@ all: cleanExe $(mainFileName)
 
 # Execution
 $(mainFileName): $(filesObj)
-	g++ $(CFLAGS) $^ -o $@
+	g++ $^ -o $@
 
 # Compilation
 %.o: %.cpp $(filesH)
-	g++ -c $< $(CFLAGS)
+	g++ -c $<
 
 
 # Utils
