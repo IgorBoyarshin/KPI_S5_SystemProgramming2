@@ -1,0 +1,6 @@
+def func(a1, a2):
+    a1 = a1 + 1
+    bAaa = (a1*2) > 2
+    bAaaaa = bAaa and True
+
+a = 5 + (2 * 3)
