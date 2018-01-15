@@ -62,7 +62,12 @@ int main() {
 
     CodeGenerator cg(sa.getNodes(), sa.getVariablesTable());
     const std::string code = cg.generate();
-    std::cout << code
+    std::ofstream outFile;
+    outFile.open("output.asm");
+    outFile << code;
+    outFile.close();
+
+    std::cout << "Writing to output.asm..."
               << std::endl;
 
     return 0;
