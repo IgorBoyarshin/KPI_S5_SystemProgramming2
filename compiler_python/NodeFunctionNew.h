@@ -12,7 +12,7 @@ class NodeFunctionNew : public Node {
     public:
         const std::string name;
         const std::vector<Argument> arguments;
-        NodeFunctionNew(const std::string& name, const std::vector<Argument>& arguments);
+        NodeFunctionNew(const std::string name, const std::vector<Argument> arguments);
 };
 
 

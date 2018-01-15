@@ -4,6 +4,7 @@
 #include "Token.h"
 #include "LexicalAnalyzer.h"
 #include "SyntaxAnalyzer.h"
+#include "CodeGenerator.h"
 
 
 int main() {
@@ -48,23 +49,21 @@ int main() {
 
     LexicalAnalyzer la;
     std::vector<Token> tokens = la.analyze(input);
-    // std::cout << la << std::endl;
+    std::cout << "----- Syntax Analyzer -------"
+              << std::endl;
     SyntaxAnalyzer sa;
     const bool inputCorrect = sa.parse(tokens);
-    std::cout << (inputCorrect ? "correct" : "incorrect") << std::endl;
+    // std::cout << (inputCorrect ? "correct" : "incorrect") << std::endl;
 
+    if (!inputCorrect) {
+        return -1;
+    }
     std::cout << "---------- Result ---------" << std::endl;
-    // for (const auto& v : sa.getNodes()) {
-    //     std::cout << v << std::endl;
-    // }
 
-
-    // CodeGenerator cg(sa.getRootNode());
-    // const auto code = cg.generate();
-    // std::cout << "---------- Code Generation ---------" << std::endl;
-    // if (!cg.errorWasFound()) {
-    //     std::cout << code;
-    // }
+    CodeGenerator cg(sa.getNodes(), sa.getVariablesTable());
+    const std::string code = cg.generate();
+    std::cout << code
+              << std::endl;
 
     return 0;
 }

@@ -20,8 +20,11 @@ class SyntaxAnalyzer {
 
         bool parse(const std::vector<Token>& tokens);
 
+        std::map<std::string, Type> getVariablesTable() const;
+        std::vector<Node*> getNodes() const;
+
     private:
-        std::vector<Node> m_Nodes;
+        std::vector<Node*> m_Nodes;
         std::map<std::string, Type> m_VariablesTable;
 
         mutable unsigned int m_NextLabelNumberToUse;
@@ -62,9 +65,6 @@ class SyntaxAnalyzer {
         unsigned int getShiftLevel(const std::vector<Token>& line) const;
         std::vector<Token> stripFromTabs(const std::vector<Token>& line) const;
         bool areParenthesesCorrect(const std::vector<Token>& line) const;
-
-        std::map<std::string, Type> getVariablesTable() const;
-        std::vector<Node> getNodes() const;
 };
 
 

@@ -65,6 +65,10 @@ std::string toString(const TokenType& tokenType) {
             return "RANGE";
         case TokenType_KeywordWhile:
             return "WHILE";
+        case TokenType_KeywordBreak:
+            return "BREAK";
+        case TokenType_KeywordContinue:
+            return "CONTINUE";
 
         default:
             return "???";
@@ -89,6 +93,10 @@ TokenType getIfKeyword(const std::string& potentialKeyword) {
         return TokenType_KeywordAnd;
     } else if (potentialKeyword.compare("or") == 0) {
         return TokenType_KeywordOr;
+    } else if (potentialKeyword.compare("break") == 0) {
+        return TokenType_KeywordBreak;
+    } else if (potentialKeyword.compare("continue") == 0) {
+        return TokenType_KeywordContinue;
     }
 
     return TokenType_Unknown;

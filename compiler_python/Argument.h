@@ -9,7 +9,7 @@ class Argument {
     public:
         const std::string name;
         const Type type;
-        Argument(const std::string& name, Type type);
+        Argument(const std::string name, Type type);
 };
 
 #endif

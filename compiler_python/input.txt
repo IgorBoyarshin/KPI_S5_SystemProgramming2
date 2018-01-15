@@ -1,4 +1,8 @@
 def func(a1, a2):
-    a1 = a1 + 1
-
-a = 5 + (8.5* 3)
+    for a in range(8,9):
+        while 2*22 < 23:
+            a1 = a1 + 1
+            break
+        a2 = 5
+    a2 = 6
+a2 = 7

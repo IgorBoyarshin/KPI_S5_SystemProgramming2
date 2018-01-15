@@ -2,5 +2,5 @@
 
 
 NodeFunctionNew::NodeFunctionNew(
-        const std::string& name, const std::vector<Argument>& arguments)
+        const std::string name, const std::vector<Argument> arguments)
     : Node(NodeType::FunctionNew), name(name), arguments(arguments) {}

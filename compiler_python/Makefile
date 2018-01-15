@@ -1,5 +1,5 @@
 mainFileName = main
-classFiles = Argument LexicalAnalyzer Node NodeFunctionNew NodeFunctionEnd NodeStatement Piece PieceType SyntaxAnalyzer Token TokenType Type
+classFiles = Argument LexicalAnalyzer Node NodeFunctionNew NodeFunctionEnd NodeStatement Piece PieceType SyntaxAnalyzer Token TokenType Type CodeGenerator
 justHeaderFiles = NodeType
 
 

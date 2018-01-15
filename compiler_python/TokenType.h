@@ -39,6 +39,8 @@ enum TokenType {
     TokenType_KeywordIn,
     TokenType_KeywordRange,
     TokenType_KeywordWhile,
+    TokenType_KeywordBreak,
+    TokenType_KeywordContinue,
 
     TokenType_Unknown
 };

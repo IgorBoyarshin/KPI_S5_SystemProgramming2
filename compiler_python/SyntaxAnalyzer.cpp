@@ -2,9 +2,32 @@
 
 
 SyntaxAnalyzer::SyntaxAnalyzer() :
-    m_Nodes(std::vector<Node>()),
+    m_Nodes(std::vector<Node*>()),
     m_VariablesTable(std::map<std::string, Type>()),
     m_NextLabelNumberToUse(0) {}
+
+
+enum LevelCode {
+    LevelCode_Function,
+    LevelCode_For,
+    LevelCode_While
+};
+
+
+template<typename Out>
+void splitString(const std::string &s, char delim, Out result) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        *(result++) = item;
+    }
+}
+
+std::vector<std::string> splitString(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    splitString(s, delim, std::back_inserter(elems));
+    return elems;
+}
 
 
 bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
@@ -12,8 +35,11 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
 
     // "Fd" === Function Definition
     bool insideFd = false;
-    std::string currentFdName;
+    // std::string currentFdName;
     unsigned int currentFdAmountOfArguments = 0;
+
+    // pair<what level it is, name of current level(so that we know what to close>
+    std::vector<std::pair<LevelCode, std::string>> levels;
 
     unsigned int lineIndex = 0;
     for (const std::vector<Token>& currentLine : lines) {
@@ -22,14 +48,50 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
         const unsigned int shiftLevel = getShiftLevel(currentLine);
         const std::vector<Token> line = stripFromTabs(currentLine);
 
-        if (line.size() == 0) {
-            if (insideFd) {
-                // Function definition has ended, create an approptiate Node
-                m_Nodes.push_back(
-                    NodeFunctionEnd(currentFdName, currentFdAmountOfArguments)
-                );
-                insideFd = false;
+        if (shiftLevel > levels.size()) {
+            std::cout << "Syntax Error:"
+                      << " Bad indentation. Too far to the right."
+                      << " In line " << lineIndex << "."
+                      << std::endl;
+            return false;
+        }
+
+        // Close all upper levels, if such exist
+        const unsigned int levelsSize = levels.size();
+        for (unsigned int levelIndex = shiftLevel; levelIndex < levelsSize; levelIndex++) {
+            const auto& level = levels.at(levels.size() - 1);
+            const LevelCode levelCode = level.first;
+            const std::string levelName = level.second;
+            std::stringstream ss;
+            switch (levelCode) {
+                case LevelCode_Function:
+                    // insideFd must be true here for sure.
+                    // Function definition has ended, create an approptiate Node
+                    m_Nodes.push_back(
+                        new NodeFunctionEnd(levelName, currentFdAmountOfArguments)
+                    );
+                    insideFd = false;
+                    break;
+
+                case LevelCode_For: {
+                    const std::string iteratorName = splitString(levelName, '_').at(1);
+                    ss << "\tinc " << iteratorName << "\n";
+                }
+                case LevelCode_While:
+                    ss << "\tjmp " << levelName << "_Begin\n";
+                    ss << "loopEnd_" << levelName << ":" << "\n";
+                    m_Nodes.push_back(
+                        new NodeStatement(
+                            ss.str()
+                        )
+                    );
+                    break;
             }
+
+            levels.pop_back();
+        }
+
+        if (line.size() == 0) {
             continue;
         }
 
@@ -53,7 +115,6 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                               << std::endl;
                     return false;
                 }
-                insideFd = true;
 
                 const Token tokenId = line.at(1);
                 const TokenType tokenIdType = tokenId.type;
@@ -74,7 +135,10 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                               << std::endl;
                     return false;
                 }
-                currentFdName = tokenIdValue;
+                // currentFdName = tokenIdValue;
+
+                insideFd = true;
+                levels.emplace_back(LevelCode_Function, tokenIdValue);
 
                 const char firstChar = tokenIdValue[0];
                 const Type functionType = (firstChar == 'b') ?
@@ -91,10 +155,10 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                     return false;
                 }
 
-                unsigned int iterator;
+                int iterator;
                 bool expectId = true;
                 std::vector<Argument> arguments;
-                for (iterator = 3; iterator < line.size() - 2; iterator++) {
+                for (iterator = 3; iterator < static_cast<int>(line.size()) - 2; iterator++) {
                     const TokenType argumentType = line.at(iterator).type;
                     const std::string argumentValue = line.at(iterator).value;
 
@@ -157,7 +221,7 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                 currentFdAmountOfArguments = arguments.size();
 
                 m_Nodes.push_back(
-                    NodeFunctionNew(currentFdName, arguments)
+                    new NodeFunctionNew(tokenIdValue, arguments)
                 );
 
                 break;
@@ -188,14 +252,22 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                 }
                 // Regardless of whether it was just 'return' or something
                 // more complex, it's time to jump to the function end.
-                ss << "\tjmp " << std::string(currentFdName) << "End\n";
+                std::string currentFunctionName;
+                for (const auto& level : levels) {
+                    // There is sure to be a function here
+                    if (level.first == LevelCode_Function) {
+                        currentFunctionName = level.second;
+                    }
+                }
+                ss << "\tjmp " << std::string(currentFunctionName) << "End\n";
                 m_Nodes.push_back(
-                    NodeStatement(
+                    new NodeStatement(
                         ss.str()
                     )
                 );
                 break;
             }
+
             case TokenType_Identifier: {
                 const std::string idValue = line.at(0).value;
                 const TokenType secondTokenType = line.at(1).type;
@@ -241,7 +313,7 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                        << "\n";
 
                     m_Nodes.push_back(
-                        NodeStatement(ss.str())
+                        new NodeStatement(ss.str())
                     );
                 } else if (secondTokenType == TokenType_LeftParenthesis) {
                     // void function call
@@ -267,7 +339,7 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                     }
 
                     m_Nodes.push_back(
-                        NodeStatement(
+                        new NodeStatement(
                             reducedFunctionCall.content
                         )
                     );
@@ -282,6 +354,216 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                 break;
             }
 
+            case TokenType_KeywordWhile: {
+                const unsigned int labelNumber = m_NextLabelNumberToUse++;
+                std::stringstream ss;
+                ss << "while" << labelNumber;
+
+                const std::string name = ss.str();
+                levels.emplace_back(LevelCode_While, name);
+
+                ss << "_Begin:\n";
+                const Piece reducedExpression =
+                    reduceExpression(line, 1, lineIndex);
+                if (reducedExpression.type != PieceType_Bool) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid While condition type. Expected Bool."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+                ss << reducedExpression.content;
+                ss << "\tcmp eax, 1\n"
+                   << "\tjne loopEnd_" << "while" << labelNumber << "\n\n";
+
+                if (line.at(line.size() - 1).type != TokenType_Colon) {
+                    std::cout << "Syntax Error:"
+                              << " Expected ':' at the end of while."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+
+                m_Nodes.push_back(
+                    new NodeStatement(
+                        ss.str()
+                    )
+                );
+
+                break;
+            }
+
+            case TokenType_KeywordFor: {
+                if (line.size() < 10) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid for loop. Too few tokens."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+                if (line.at(2).type != TokenType_KeywordIn) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid for loop. 'in' expected at position 2."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+                if (line.at(3).type != TokenType_KeywordRange) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid for loop. 'range' expected at position 3."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+                if (line.at(6).type != TokenType_Comma) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid 'range' syntax. Comma expected at position 6."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+                if (line.at(9).type != TokenType_Colon) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid for loop. ':' expected at the end of 'for' loop."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+
+                const Token iterator = line.at(1);
+
+                if (iterator.type != TokenType_Identifier) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid 'for' loop. Identifier expected at position 1."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+
+                const auto fromTmp = convertTokensIntoPieces({line.at(5)}, 0, lineIndex);
+                const auto toTmp = convertTokensIntoPieces({line.at(7)}, 0, lineIndex);
+                if (fromTmp.size() == 0 || toTmp.size() == 0) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid 'range' syntax."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+                const Piece from = fromTmp.at(0);
+                const Piece to = toTmp.at(0);
+                if (from.type != PieceType_Number || to.type != PieceType_Number) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid 'range' syntax. Expected Numbers as range."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+
+                const std::string iteratorName = line.at(1).value;
+                if (m_VariablesTable.find(iteratorName) == m_VariablesTable.end()) {
+                    m_VariablesTable.insert({iteratorName, Type_Number});
+                }
+
+                const unsigned int labelNumber = m_NextLabelNumberToUse++;
+                std::stringstream ss;
+                ss  << from.content
+                    << "\tmov " << iteratorName << ", eax\n";
+
+                std::stringstream nameStream;
+                nameStream << "for_" << iteratorName << "_" << labelNumber;
+                const std::string name = nameStream.str();
+                levels.emplace_back(LevelCode_For, name);
+                ss << name << "_Begin:\n";
+
+                ss << "\tmov ebx, " << iteratorName << "\n"
+                   << to.content;
+                ss << "\tcmp ebx, eax\n"
+                   << "\tjge loopEnd_" << name << "\n\n";
+
+                m_Nodes.push_back(
+                    new NodeStatement(
+                        ss.str()
+                    )
+                );
+
+                break;
+            }
+
+            case TokenType_KeywordBreak: {
+                if (line.size() > 1) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid 'break' syntax. Expected one token."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+
+                // Find closest loop
+                bool found = false;
+                for (int i = static_cast<int>(levels.size()) - 1; i >= 0; i--) {
+                    const auto& level = levels.at(i);
+                    if (level.first == LevelCode_For || level.first == LevelCode_While) {
+                        found = true;
+                        const std::string& name = level.second;
+                        std::stringstream ss;
+                        ss << "\tjmp loopEnd_" << name << "\n";
+                        m_Nodes.push_back(
+                            new NodeStatement(
+                                ss.str()
+                            )
+                        );
+                        break;
+                    }
+                }
+                if (!found) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid 'break' syntax: can't be used outside of loop."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+
+                break;
+            }
+
+            case TokenType_KeywordContinue: {
+                // TODO: if this is a 'for' loop => 'inc counter' must be placed
+                if (line.size() > 1) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid 'continue' syntax. Expected one token."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+
+                // Find closest loop
+                bool found = false;
+                for (int i = static_cast<int>(levels.size()) - 1; i >= 0; i--) {
+                    const auto& level = levels.at(i);
+                    if (level.first == LevelCode_For || level.first == LevelCode_While) {
+                        found = true;
+                        const std::string& name = level.second;
+                        std::stringstream ss;
+                        ss << "\tjmp " << name << "_Begin\n";
+                        m_Nodes.push_back(
+                            new NodeStatement(
+                                ss.str()
+                            )
+                        );
+                        break;
+                    }
+                }
+                if (!found) {
+                    std::cout << "Syntax Error:"
+                              << " Invalid 'continue' syntax: can't be used outside of loop."
+                              << " In line " << lineIndex << "."
+                              << std::endl;
+                    return false;
+                }
+
+                break;
+            }
+
             default:
                 std::cout << "Syntax Error:"
                           << " Invalid starting Token."
@@ -290,6 +572,8 @@ bool SyntaxAnalyzer::parse(const std::vector<Token>& tokens) {
                 return false;
         }
     }
+
+    return true;
 }
 
 
@@ -437,8 +721,8 @@ Piece SyntaxAnalyzer::reduceExpression(const std::vector<Token> line, unsigned i
     if (pieces.size() == 1) {
         return pieces.at(0);
     } else {
-        std::cout << "Hmmmm......."
-                  << std::endl;
+        // std::cout << "Hmmmm......."
+        //           << std::endl;
         return Piece(PieceType_Undefined, ""); // error
     }
 }
@@ -1007,6 +1291,6 @@ std::map<std::string, Type> SyntaxAnalyzer::getVariablesTable() const {
 }
 
 
-std::vector<Node> SyntaxAnalyzer::getNodes() const {
+std::vector<Node*> SyntaxAnalyzer::getNodes() const {
     return m_Nodes;
 }
